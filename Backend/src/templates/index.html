@@ -1,7 +1,45 @@
 {% extends './principio.html' %}
 
 {% block tittle %} Inicio {% endblock %}
-  
+
+{% block CustomCSS %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/index.css') }}">
+{% endblock %} 
+
 {% block body %}
-    <h1>Ingreso a la página principal</h1>
+     <header>
+        <nav class="navegacion">
+            <img src="assets/imagen_logo.png" alt="imagen_logo">
+            <div class="enlaces">
+                <a href="enciclopedia.html">Adopta</a>
+                <a href="donaciones.html">¿Quieres Ayudar?</a>
+                <a href="adopcion.html">Soporte</a>
+                <a href="cuenta.html">Mi cuenta</a>
+                <a href=""><img class="lupa" src="assets/lupa_busqueda.jpg" alt="lupa busqueda">¿Buscas alguna
+                    fundación?</a>
+            </div>
+        </nav>
+    </header>
+    <main class="container">
+        <div class="fundacion">
+            <h2>Fundación "Rescátame"</h2>
+            <p>Bogotá</p>
+            <img src="assets/fundacion_1.png" alt="Fundación 1">
+        </div>
+        <div class="fundacion">
+            <h2>Fundación "Peluditos en apuros"</h2>
+            <p>Medellín</p>
+            <img src="assets/fundacion_2.png" alt="Fundación 2">
+        </div>
+        <div class="fundacion">
+            <h2>Fundación "Dejando Huella"</h2>
+            <p>Pereira</p>
+            <img src="assets/fundacion_3.png" alt="Fundación 3">
+        </div>
+    </main>
+    <section>
+        <h1>¿Quieres adoptar? ¡Tenemos la mascota ideal para ti!</h1>
+        <h1>¿Quienes Somos?</h1>
+        <p>Una entidad que busca colaborar con las distintas fundaciones <br>de animales para dar mayor visibilidad</p>
+    </section>
 {% endblock %}
