@@ -1,0 +1,47 @@
+{% extends './principio.html' %}
+
+{% block tittle %} Ingreso {% endblock %}
+
+{% block CustomCSS %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/login.css') }}">    
+{% endblock %}   
+
+{% block body %}
+    <main class="form-signin w-100 m-auto">
+        <form action="/login" method="POST">
+            <img class="mb-4" src="{{ url_for('static', filename='img/logo_bootstrap.jpg') }}" alt="Bootstrap Logo" width="72" height="57">
+            {% with messages = get_flashed_messages() %}
+            <br>
+            {% for message in messages %}
+            <div class="alert alert-primary alert-dismissible" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endwith %}
+            <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+            
+            <!-- Email Input -->
+            <div class="form-floating">
+                <input type="text" class="form-control" id="floatingInput" name="cedula" placeholder="101358...">
+                <label for="floatingInput">Cedula</label>
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-floating">
+                <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Password">
+                <label for="floatingPassword">Contaraseña</label>
+            </div>
+
+            <!-- Remember Me Checkbox -->
+            <div class="form-check text-start my-3">
+                <input class="form-check-input" type="checkbox" value="remember-me" id="checkDefault">
+                <label class="form-check-label" for="checkDefault">Remember me</label>
+            </div>
+
+            <!-- Submit Button -->
+            <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
+            <p class="mt-5 mb-3 text-body-secondary">&copy; 2017–2025</p>
+        </form>
+    </main>
+{% endblock %}

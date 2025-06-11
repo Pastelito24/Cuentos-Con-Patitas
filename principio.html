@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block tittle %} {% endblock %}</title>
+    <!--Bootstrap importado-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" 
+    integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <!--Custoom CSS-->
+    {% block CustomCSS %}    
+    {% endblock %}    
+</head>
+<body class="text-center">
+    {% block body %}    
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" 
+    integrity="sha384-KyZXEAg3QhqLMpGuHWFvKThC1c3NH6N/bFuswvZ8CAq5xPbG/Y5Nxjt+FwJklDNO" 
+    crossorigin="anonymous"></script>
+</body>
+</html>
