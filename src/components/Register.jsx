@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/img/logo.png';
 import backgroundImage from '../assets/img/fondoperrogato.jpg';
+import huella from '../assets/img/huella-login-registro.png';
 import Loading from './Loading';
 import '../App.css';
 
@@ -15,7 +16,8 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
     documentNumber: '',
     phone: '',
     birthdate: '',
-    address: ''
+    address: '',
+    rol: 'Usuario'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -37,9 +39,35 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
+    // Validar número de documento (solo números, entre 7 y 11 dígitos)
+    if (!/^\d{7,11}$/.test(formData.documentNumber)) {
+      setError('El número de documento debe tener entre 7 y 11 dígitos.');
+      return;
+    }
+
+    // Validar teléfono (exactamente 10 dígitos)
+    if (!/^\d{10}$/.test(formData.phone)) {
+      setError('El número de teléfono debe tener exactamente 10 dígitos.');
+      return;
+    }
+
+    // Validar correo (solo un arroba, y formato básico correcto)
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(formData.email)) {
+      setError('El correo electrónico no es válido.');
+      return;
+    }
+
+    // Validar contraseña (mínimo 8 caracteres, al menos una mayúscula)
+    const passwordRegex = /^(?=.*[A-Z]).{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError('La contraseña debe tener al menos 8 caracteres y una letra mayúscula.');
+      return;
+    }
+
+    // Confirmar que las contraseñas coinciden
     if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
+      setError('Las contraseñas no coinciden.');
       return;
     }
 
@@ -59,7 +87,8 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
           documentNumber: formData.documentNumber,
           phone: formData.phone,
           birthdate: formData.birthdate,
-          address: formData.address
+          address: formData.address,
+          rol: formData.rol
         })
       });
 
@@ -267,7 +296,7 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
         </p>
       </div>
       <div className={`stagger-fields${showFields ? ' stagger-in' : ''}${!showFields ? ' stagger-hide' : ''}`}>
-        <form onSubmit={onFormSubmit} style={styles.form}>
+        <form onSubmit={handleSubmit} style={styles.form}>
           {error && (
             <div style={{
               color: '#ef4444',
@@ -280,6 +309,20 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
               {error}
             </div>
           )}
+          <div style={styles.inputContainer}>
+            <select
+              name="rol"
+              id="rol"
+              value={formData.rol}
+              onChange={handleChange}
+              required
+              style={{ ...styles.input, paddingLeft: '48px' }}
+            >
+              <option value="Usuario">Usuario</option>
+              <option value="Fundacion">Fundacion</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
           <div style={styles.inputContainer}>
             <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -313,12 +356,15 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4z" />
             </svg>
             <input
-              type="text"
+              type="number"
               name="documentNumber"
               placeholder="Número de Documento"
               value={formData.documentNumber}
               onChange={handleChange}
               required
+              min="1000000"
+              max="99999999999"
+              pattern="\d{7,11}"
               style={styles.input}
             />
           </div>
@@ -327,12 +373,15 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4z" />
             </svg>
             <input
-              type="text"
+              type="number"
               name="phone"
               placeholder="Teléfono"
               value={formData.phone}
               onChange={handleChange}
               required
+              min="1000000000"
+              max="9999999999"
+              pattern="\d{10}"
               style={styles.input}
             />
           </div>
@@ -448,13 +497,7 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
           >
             Registrarse
             <span className="paw-icon">
-              <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="16" cy="24" rx="7" ry="5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="8.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="23.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="11" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="21" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-              </svg>
+              <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
             </span>
           </button>
         </form>
@@ -530,6 +573,20 @@ export function RegisterContent(props) {
             </div>
           )}
           <div style={styles.inputContainer}>
+            <select
+              name="rol"
+              id="rol"
+              value={formData.rol}
+              onChange={handleChange}
+              required
+              style={{ ...styles.input, paddingLeft: '48px' }}
+            >
+              <option value="Usuario">Usuario</option>
+              <option value="Fundacion">Fundacion</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div style={styles.inputContainer}>
             <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
@@ -562,12 +619,15 @@ export function RegisterContent(props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4z" />
             </svg>
             <input
-              type="text"
+              type="number"
               name="documentNumber"
               placeholder="Número de Documento"
               value={formData.documentNumber}
               onChange={handleChange}
               required
+              min="1000000"
+              max="99999999999"
+              pattern="\d{7,11}"
               style={styles.input}
             />
           </div>
@@ -576,12 +636,15 @@ export function RegisterContent(props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4z" />
             </svg>
             <input
-              type="text"
+              type="number"
               name="phone"
               placeholder="Teléfono"
               value={formData.phone}
               onChange={handleChange}
               required
+              min="1000000000"
+              max="9999999999"
+              pattern="\d{10}"
               style={styles.input}
             />
           </div>
@@ -697,13 +760,7 @@ export function RegisterContent(props) {
           >
             Registrarse
             <span className="paw-icon">
-              <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="16" cy="24" rx="7" ry="5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="8.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="23.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="11" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="21" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-              </svg>
+              <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
             </span>
           </button>
         </form>

@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from flask_cors import CORS
 from app import create_app
 from app.configuracion import configu
+from datetime import datetime
 
 app = create_app()
 CORS(app)  # Habilitar CORS para todas las rutas
@@ -53,6 +54,33 @@ def dashboard():
         'status': 'success',
         'message': 'Bienvenido al dashboard'
     })
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    try:
+        data = request.get_json()
+        # Calcular edad a partir de la fecha de nacimiento (YYYY-MM-DD)
+        birthdate = datetime.strptime(data['birthdate'], '%Y-%m-%d')
+        today = datetime.today()
+        edad = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
+        user = Usuario(
+            data['documentNumber'],
+            data['password'],
+            data.get('rol', 'Usuario'),
+            data['username'],
+            data['phone'],
+            data['email'],
+            data['address'],
+            edad,
+            None  # fundacion_id por defecto
+        )
+        creado = Modelo_usuario.crear_usuario(db, user)
+        if creado:
+            return jsonify({'status': 'success', 'message': 'Usuario registrado correctamente', 'user': data}), 201
+        else:
+            return jsonify({'status': 'error', 'message': 'No se pudo registrar el usuario'}), 400
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

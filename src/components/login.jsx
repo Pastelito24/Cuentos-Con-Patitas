@@ -4,6 +4,7 @@ import logo from '../assets/img/logo.png';
 import backgroundImage from '../assets/img/fondoperrogato.jpg';  
 import Loading from './Loading';
 import '../App.css';
+import huella from '../assets/img/huella-login-registro.png';
 
 function Login({ onSwitchToRegister, onFormSubmit }) {
   const navigate = useNavigate();
@@ -20,6 +21,14 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    // Validar contraseña
+  const passwordRegex = /^(?=.*[A-Z]).{8,}$/;
+  if (!passwordRegex.test(password)) {
+  setIsLoading(false);
+  setError('La contraseña debe tener al menos 8 caracteres y contener una letra mayúscula.');
+  return;
+}
+
     setIsLoading(true);
     
     try {
@@ -377,13 +386,7 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
           >
             Iniciar sesión
             <span className="paw-icon">
-              <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="16" cy="24" rx="7" ry="5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="8.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="23.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="11" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="21" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-              </svg>
+              <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
             </span>
           </button>
         </form>
@@ -530,13 +533,7 @@ export function LoginContent(props) {
           >
             Iniciar sesión
             <span className="paw-icon">
-              <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="16" cy="24" rx="7" ry="5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="8.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="23.5" cy="13.5" rx="2.5" ry="4.5" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="11" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-                <ellipse cx="21" cy="8" rx="2" ry="3" fill="#fff" stroke="#06b6d4" strokeWidth="2"/>
-              </svg>
+              <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
             </span>
           </button>
         </form>
