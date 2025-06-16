@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useRef } from 'react';
-import Login, { LoginContent } from './components/Login';
-import Register, { RegisterContent } from './components/Register';
+import Login from './components/login';
+import Register from './components/Register';
 import Home from './components/Home';
 import './App.css'; // Asegúrate de importar los estilos globales
 import backgroundImage from './assets/img/fondoperrogato.jpg';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import Loading from './components/Loading';
+
 
 function App() {
   const [isLogin, setIsLogin] = useState(true);
@@ -52,7 +54,10 @@ function App() {
   };
 
   const handleSwitchToRegister = () => setIsLogin(false);
-  const handleSwitchToLogin = () => setIsLogin(true);
+  const handleSwitchToLogin = () => {
+    console.log('Cambiando a login');
+    setIsLogin(true);
+  };
 
   // Fondo decorativo global
   const backgroundStyles = {
@@ -77,7 +82,6 @@ function App() {
     background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(59, 130, 246, 0.1) 50%, rgba(255, 255, 255, 0.3) 100%)',
     pointerEvents: 'none',
   };
-
   // Estilos copiados directamente de Login.jsx y Register.jsx
   const loginStyles = {
     card: {
@@ -269,8 +273,8 @@ function App() {
           <Route
             path="/"
             element={
-              <div className="auth-center-container">
-                <div className={`auth-card${isLogin ? '' : ' register-card'}`}>  
+              <div className={`auth-center-container`}>
+                <div className={`${isLogin ? 'auth-card' : 'register-card'}${isLogin === null ? '' : ' card-animate-in'}`}>  
                   <TransitionGroup component={null}>
                     <CSSTransition
                       key={isLogin ? 'login' : 'register'}
@@ -309,4 +313,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;   

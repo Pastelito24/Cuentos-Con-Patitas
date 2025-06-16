@@ -1,22 +1,65 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom';
 
 const text = "Érase una vez...";
 
-export default function Loading() {
+function LoaderContent() {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollLeft = 0;
+      document.documentElement.scrollLeft = 0;
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: '#fdecda',
-      zIndex: 1000,
-      fontSize: '16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999999,
+        backgroundColor: '#fdecda', // fondo crema sólido
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+        pointerEvents: 'none',
+        paddingTop: 0,
+      }}
+    >
+      {/* Texto */}
+      <p
+        style={{
+          fontSize: '2.4rem',
+          fontWeight: 'bold',
+          color: '#b5936f',
+          letterSpacing: '1px',
+          display: 'flex',
+          gap: '2px',
+          textShadow: '2px 2px 8px #fff, 0 2px 8px #fff',
+          marginBottom: '200px', // separación clara del gato
+        }}
+      >
+        {text.split('').map((char, index) => (
+          <span
+            key={index}
+            className="jump-letter"
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+        ))}
+      </p>
+
+      {/* Gato loader */}
+      <div className="cat">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div className="cat__segment" key={i}></div>
+        ))}
+      </div>
+
+      {/* Animación en línea */}
       <style>
         {`
           @keyframes jump {
@@ -29,43 +72,13 @@ export default function Loading() {
           }
         `}
       </style>
-      <div style={{
-        position: 'absolute',
-        top: '8%',
-        left: 0,
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center'
-      }}>
-        <p
-          className="loading-text"
-          style={{
-            color: '#b5936f',
-            fontSize: '2.5rem',
-            fontWeight: 'bold',
-            letterSpacing: '1px',
-            display: 'flex',
-            gap: '2px',
-            margin: 0
-          }}
-        >
-          {text.split('').map((char, index) => (
-            <span
-              key={index}
-              className="jump-letter"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {char === ' ' ? '\u00A0' : char}
-            </span>
-          ))}
-        </p>
-      </div>
-      {/* Loader del gato centrado */}
-      <div className="cat">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div className="cat__segment" key={i}></div>
-        ))}
-      </div>
     </div>
   );
-} 
+}
+
+export default function Loading() {
+  return ReactDOM.createPortal(
+    <LoaderContent />,
+    document.body
+  );
+}

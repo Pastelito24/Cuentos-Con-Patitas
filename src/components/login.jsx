@@ -5,6 +5,7 @@ import backgroundImage from '../assets/img/fondoperrogato.jpg';
 import Loading from './Loading';
 import '../App.css';
 import huella from '../assets/img/huella-login-registro.png';
+import { motion, AnimatePresence } from "framer-motion";
 
 function Login({ onSwitchToRegister, onFormSubmit }) {
   const navigate = useNavigate();
@@ -17,23 +18,21 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
   const [isPasswordToggleHovered, setIsPasswordToggleHovered] = useState(false);
   const [hoveredLink, setHoveredLink] = useState(null);
   const [showFields, setShowFields] = useState(false);
+  const [tipoLogin, setTipoLogin] = useState('usuario'); // 'usuario' o 'fundacion'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     // Validar contraseña
-  const passwordRegex = /^(?=.*[A-Z]).{8,}$/;
-  if (!passwordRegex.test(password)) {
-  setIsLoading(false);
-  setError('La contraseña debe tener al menos 8 caracteres y contener una letra mayúscula.');
-  return;
-}
-
+    const passwordRegex = /^(?=.*[A-Z]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setIsLoading(false);
+      setError('La contraseña debe tener al menos 8 caracteres y contener una letra mayúscula.');
+      return;
+    }
     setIsLoading(true);
-    
     try {
-      console.log('Intentando login con:', { email, password });
-      
+      console.log('Intentando login con:', { email, password, rol: tipoLogin });
       const response = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
         headers: {
@@ -41,19 +40,20 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          email,
-          password
+          ...(tipoLogin === 'usuario' ? { email } : { nit: email }),
+          password,
+          rol: tipoLogin
         })
       });
-
-      console.log('Respuesta del servidor:', response.status);
       const data = await response.json();
+      console.log('Respuesta del servidor:', response.status);
       console.log('Datos recibidos:', data);
-
       if (response.ok) {
-        console.log('Login exitoso:', data);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        // Simula el tiempo de carga del loader
+        if (tipoLogin === 'usuario') {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        } else if (tipoLogin === 'fundacion' && data.fundacion) {
+          localStorage.setItem('fundacion', JSON.stringify(data.fundacion));
+        }
         setTimeout(() => {
           setIsLoading(false);
           navigate('/index1');
@@ -82,8 +82,8 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
   const styles = {
     container: {
       minHeight: '100vh',
-      minWidth: '100vw',
-      width: '100vw',
+      width: '100%',
+      minWidth: 0,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -291,118 +291,264 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
   };
 
   return (
-    <div className="form-wrapper sign-in">
-      {/* Logo, título y texto motivacional */}
-      <div className={`stagger-logo${showFields ? ' stagger-in' : ''}${!showFields ? ' stagger-hide' : ''}`} style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{ width: '140px', height: '140px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
-          <img src={logo} alt="Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', display: 'block' }} />
-        </div>
-        <h2 style={{ color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, fontFamily: "'Baloo 2', Arial, sans-serif", letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>Cuentos Con Patitas</h2>
-        <p style={{ color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
-          "Cada huellita tiene una historia... ¡Crea la tuya!"
-        </p>
-      </div>
-      {/* Campos y links */}
-      <div className={`stagger-fields${showFields ? ' stagger-in' : ''}${!showFields ? ' stagger-hide' : ''}`}>
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {error && (
-            <div style={{
-              color: '#ef4444',
-              backgroundColor: '#fee2e2',
-              padding: '12px',
-              borderRadius: '8px',
-              marginBottom: '16px',
-              textAlign: 'center'
-            }}>
-              {error}
-            </div>
-          )}
-          {/* Email input */}
-          <div style={styles.inputContainer}>
-            <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-            </svg>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="Número de Identificación"
-              value={email}
-              onChange={(e) => {
-                // Solo permite números
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                setEmail(value);
-              }}
-              required
-              style={styles.input}
-            />
-          </div>
-          {/* Password input */}
-          <div style={styles.inputContainer}>
-            <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{...styles.input, ...styles.inputPassword}}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              onMouseEnter={() => setIsPasswordToggleHovered(true)}
-              onMouseLeave={() => setIsPasswordToggleHovered(false)}
+    <div className="form-wrapper sign-in" style={{
+      width: '100%',
+      maxWidth: '420px',
+      background: 'rgba(255,255,255,0.55)',
+      borderRadius: '24px',
+      boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+      padding: '20px 12px',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1.5px solid rgba(255,255,255,0.25)',
+      margin: '32px 0',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      minHeight: 0,
+      transition: 'height 0.5s cubic-bezier(0.4,0,0.2,1), min-height 0.5s cubic-bezier(0.4,0,0.2,1), max-height 0.5s cubic-bezier(0.4,0,0.2,1)',
+      overflow: 'hidden',
+      zIndex: 3
+    }}>
+      <AnimatePresence>
+        {showFields && (
+          <motion.div
+            key="login-card-outer"
+            layout
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '24px',
+              overflow: 'hidden',
+              minHeight: '100vh',
+            }}
+          >
+            <motion.div
+              key="login-card"
+              layout
+              initial={{ y: 200, opacity: 0, scale: 0.92 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 100, opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 60, damping: 16 }}
               style={{
-                ...styles.togglePassword,
-                ...(isPasswordToggleHovered ? styles.togglePasswordHover : {})
+                originY: 0.5,
+                width: '100%',
+                maxWidth: '420px',
+                minHeight: '560px',
+                borderRadius: '24px',
+                padding: '32px',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                background: 'rgba(255,255,255,0.55)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1.5px solid rgba(255,255,255,0.25)'
               }}
             >
-              {showPassword ? (
-                <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              ) : (
-                <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12s4-7 9-7 9 7 9 7-4 7-9 7-9-7-9-7z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.5 9.5l5 5m0-5l-5 5" />
-                </svg>
-              )}
-            </button>
-          </div>
-          {/* Login button */}
-          <button
-            type="submit"
-            onMouseEnter={() => setIsLoginHovered(true)}
-            onMouseLeave={() => setIsLoginHovered(false)}
-            style={{
-              ...styles.loginButton,
-              ...(isLoginHovered ? styles.loginButtonHover : {})
-            }}
-            className="loginButton"
-          >
-            Iniciar sesión
-            <span className="paw-icon">
-              <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
-            </span>
-          </button>
-        </form>
-        {/* Links y decorativos */}
-        <div style={styles.links}>
-          <span
-            onClick={onSwitchToRegister}
-            style={styles.link}
-          >
-            ¿No tienes cuenta? Regístrate aquí
-          </span>
-        </div>
-        <div style={styles.decorativeElement1}></div>
-        <div style={styles.decorativeElement2}></div>
-        <div style={styles.decorativeElement3}></div>
-      </div>
+              {/* Logo, título y texto motivacional */}
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <div style={{ width: '140px', height: '140px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+                  <img src={logo} alt="Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', display: 'block' }} />
+                </div>
+                <h2 style={{ color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, fontFamily: "'Baloo 2', Arial, sans-serif", letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>Cuentos Con Patitas</h2>
+                <p style={{ color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
+                  "Cada huellita tiene una historia... ¡Crea la tuya!"
+                </p>
+              </div>
+              {/* Selector de tipo de login */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <button
+                  type="button"
+                  onClick={() => setTipoLogin('usuario')}
+                  className="rol-btn-login"
+                  style={{
+                    background: tipoLogin === 'usuario' ? '#06b6d4' : '#eee',
+                    color: tipoLogin === 'usuario' ? '#fff' : '#333',
+                    border: 'none',
+                    outline: 'none',
+                    borderRadius: '16px 0 0 16px',
+                    padding: '10px 24px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s, color 0.3s, box-shadow 0.3s, filter 0.3s, transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                    transform: tipoLogin === 'usuario' ? 'scale(1.15) translateY(-4px)' : 'scale(1)',
+                    boxShadow: tipoLogin === 'usuario' ? '0 6px 24px 0 rgba(6,182,212,0.25)' : 'none',
+                    filter: tipoLogin === 'usuario' ? 'blur(0.5px)' : 'none',
+                    zIndex: tipoLogin === 'usuario' ? 2 : 1
+                  }}
+                >
+                  Usuario
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipoLogin('fundacion')}
+                  className="rol-btn-login"
+                  style={{
+                    background: tipoLogin === 'fundacion' ? '#06b6d4' : '#eee',
+                    color: tipoLogin === 'fundacion' ? '#fff' : '#333',
+                    border: 'none',
+                    outline: 'none',
+                    borderRadius: '0 16px 16px 0',
+                    padding: '10px 24px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s, color 0.3s, box-shadow 0.3s, filter 0.3s, transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                    transform: tipoLogin === 'fundacion' ? 'scale(1.15) translateY(-4px)' : 'scale(1)',
+                    boxShadow: tipoLogin === 'fundacion' ? '0 6px 24px 0 rgba(6,182,212,0.25)' : 'none',
+                    filter: tipoLogin === 'fundacion' ? 'blur(0.5px)' : 'none',
+                    zIndex: tipoLogin === 'fundacion' ? 2 : 1
+                  }}
+                >
+                  Fundación
+                </button>
+                <style>{`
+                  .rol-btn-login:hover {
+                    background: #0891b2 !important;
+                    color: #fff !important;
+                    box-shadow: 0 8px 24px 0 #06b6d499;
+                    transform: scale(1.08) translateY(-2px);
+                  }
+                `}</style>
+              </div>
+              {/* Campos y links */}
+              <div>
+                <form onSubmit={handleSubmit} style={styles.form}>
+                  {error && (
+                    <div style={{
+                      color: '#ef4444',
+                      backgroundColor: '#fee2e2',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      marginBottom: '16px',
+                      textAlign: 'center'
+                    }}>
+                      {error}
+                    </div>
+                  )}
+                  {/* Email input */}
+                  <div style={styles.inputContainer}>
+                    <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder={tipoLogin === 'usuario' ? 'Número de Identificación' : 'NIT'}
+                      value={email}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/[^0-9]/g, '');
+                        setEmail(value);
+                      }}
+                      required
+                      style={styles.input}
+                    />
+                  </div>
+                  {/* Password input */}
+                  <div style={styles.inputContainer}>
+                    <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Contraseña"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      style={{...styles.input, ...styles.inputPassword}}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      onMouseEnter={() => setIsPasswordToggleHovered(true)}
+                      onMouseLeave={() => setIsPasswordToggleHovered(false)}
+                      style={{
+                        ...styles.togglePassword,
+                        ...(isPasswordToggleHovered ? styles.togglePasswordHover : {})
+                      }}
+                    >
+                      {showPassword ? (
+                        <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      ) : (
+                        <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12s4-7 9-7 9 7 9 7-4 7-9 7-9-7-9-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.5 9.5l5 5m0-5l-5 5" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {/* Login button */}
+                  <button
+                    type="submit"
+                    onMouseEnter={() => setIsLoginHovered(true)}
+                    onMouseLeave={() => setIsLoginHovered(false)}
+                    style={{
+                      ...styles.loginButton,
+                      ...(isLoginHovered ? styles.loginButtonHover : {})
+                    }}
+                    className="loginButton"
+                  >
+                    Iniciar sesión
+                    <span className="paw-icon">
+                      <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
+                    </span>
+                  </button>
+                  {/* Link para cambiar a registro debajo del botón */}
+                  <div style={{ textAlign: 'center', marginTop: 18 }}>
+                    <span
+                      onClick={onSwitchToRegister}
+                      style={{
+                        color: '#0891b2',
+                        fontSize: '16px',
+                        textDecoration: 'underline',
+                        textDecorationColor: '#0891b2',
+                        margin: '12px 0',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        display: 'inline-block',
+                        padding: '4px 0',
+                        borderRadius: '8px'
+                      }}
+                      className="login-link-anim"
+                    >
+                      ¿No tienes cuenta? Regístrate aquí
+                    </span>
+                    <style>{`
+                      .login-link-anim:hover {
+                        color: #0f766e !important;
+                        text-decoration-color: #0f766e !important;
+                        background: #e0f7fa;
+                        transform: scale(1.06);
+                        transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+                      }
+                    `}</style>
+                  </div>
+                </form>
+                <div style={styles.decorativeElement1}></div>
+                <div style={styles.decorativeElement2}></div>
+                <div style={styles.decorativeElement3}></div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <style>{`
+        .rol-selector-btn {
+          transition: background 0.3s, color 0.3s, transform 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+        .rol-selector-btn.active {
+          transform: scale(1.08);
+        }
+      `}</style>
     </div>
   );
 }
@@ -438,118 +584,264 @@ export function LoginContent(props) {
   }, []);
 
   return (
-    <div className="form-wrapper sign-in">
-      {/* Logo, título y texto motivacional */}
-      <div className={`stagger-logo${showFields ? ' stagger-in' : ''}${!showFields ? ' stagger-hide' : ''}`} style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{ width: '140px', height: '140px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
-          <img src={logo} alt="Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', display: 'block' }} />
-        </div>
-        <h2 style={{ color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, fontFamily: "'Baloo 2', Arial, sans-serif", letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>Cuentos Con Patitas</h2>
-        <p style={{ color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
-          "Cada huellita tiene una historia... ¡Crea la tuya!"
-        </p>
-      </div>
-      {/* Campos y links */}
-      <div className={`stagger-fields${showFields ? ' stagger-in' : ''}${!showFields ? ' stagger-hide' : ''}`}>
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {error && (
-            <div style={{
-              color: '#ef4444',
-              backgroundColor: '#fee2e2',
-              padding: '12px',
-              borderRadius: '8px',
-              marginBottom: '16px',
-              textAlign: 'center'
-            }}>
-              {error}
-            </div>
-          )}
-          {/* Email input */}
-          <div style={styles.inputContainer}>
-            <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-            </svg>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="Número de Identificación"
-              value={email}
-              onChange={(e) => {
-                // Solo permite números
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                setEmail(value);
-              }}
-              required
-              style={styles.input}
-            />
-          </div>
-          {/* Password input */}
-          <div style={styles.inputContainer}>
-            <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{...styles.input, ...styles.inputPassword}}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              onMouseEnter={() => setIsPasswordToggleHovered(true)}
-              onMouseLeave={() => setIsPasswordToggleHovered(false)}
+    <div className="form-wrapper sign-in" style={{
+      width: '100%',
+      maxWidth: '420px',
+      background: 'rgba(255,255,255,0.55)',
+      borderRadius: '24px',
+      boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+      padding: '20px 12px',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1.5px solid rgba(255,255,255,0.25)',
+      margin: '32px 0',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      minHeight: 0,
+      transition: 'height 0.5s cubic-bezier(0.4,0,0.2,1), min-height 0.5s cubic-bezier(0.4,0,0.2,1), max-height 0.5s cubic-bezier(0.4,0,0.2,1)',
+      overflow: 'hidden',
+      zIndex: 3
+    }}>
+      <AnimatePresence>
+        {showFields && (
+          <motion.div
+            key="login-card-outer"
+            layout
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '24px',
+              overflow: 'hidden',
+              minHeight: '100vh',
+            }}
+          >
+            <motion.div
+              key="login-card"
+              layout
+              initial={{ y: 200, opacity: 0, scale: 0.92 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 100, opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 60, damping: 16 }}
               style={{
-                ...styles.togglePassword,
-                ...(isPasswordToggleHovered ? styles.togglePasswordHover : {})
+                originY: 0.5,
+                width: '100%',
+                maxWidth: '420px',
+                minHeight: '560px',
+                borderRadius: '24px',
+                padding: '32px',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                background: 'rgba(255,255,255,0.55)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1.5px solid rgba(255,255,255,0.25)'
               }}
             >
-              {showPassword ? (
-                <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              ) : (
-                <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12s4-7 9-7 9 7 9 7-4 7-9 7-9-7-9-7z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.5 9.5l5 5m0-5l-5 5" />
-                </svg>
-              )}
-            </button>
-          </div>
-          {/* Login button */}
-          <button
-            type="submit"
-            onMouseEnter={() => setIsLoginHovered(true)}
-            onMouseLeave={() => setIsLoginHovered(false)}
-            style={{
-              ...styles.loginButton,
-              ...(isLoginHovered ? styles.loginButtonHover : {})
-            }}
-            className="loginButton"
-          >
-            Iniciar sesión
-            <span className="paw-icon">
-              <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
-            </span>
-          </button>
-        </form>
-        {/* Links y decorativos */}
-        <div style={styles.links}>
-          <span
-            onClick={onSwitchToRegister}
-            style={styles.link}
-          >
-            ¿No tienes cuenta? Regístrate aquí
-          </span>
-        </div>
-        <div style={styles.decorativeElement1}></div>
-        <div style={styles.decorativeElement2}></div>
-        <div style={styles.decorativeElement3}></div>
-      </div>
+              {/* Logo, título y texto motivacional */}
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <div style={{ width: '140px', height: '140px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+                  <img src={logo} alt="Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', display: 'block' }} />
+                </div>
+                <h2 style={{ color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, fontFamily: "'Baloo 2', Arial, sans-serif", letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>Cuentos Con Patitas</h2>
+                <p style={{ color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
+                  "Cada huellita tiene una historia... ¡Crea la tuya!"
+                </p>
+              </div>
+              {/* Selector de tipo de login */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <button
+                  type="button"
+                  onClick={() => setTipoLogin('usuario')}
+                  className="rol-btn-login"
+                  style={{
+                    background: tipoLogin === 'usuario' ? '#06b6d4' : '#eee',
+                    color: tipoLogin === 'usuario' ? '#fff' : '#333',
+                    border: 'none',
+                    outline: 'none',
+                    borderRadius: '16px 0 0 16px',
+                    padding: '10px 24px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s, color 0.3s, box-shadow 0.3s, filter 0.3s, transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                    transform: tipoLogin === 'usuario' ? 'scale(1.15) translateY(-4px)' : 'scale(1)',
+                    boxShadow: tipoLogin === 'usuario' ? '0 6px 24px 0 rgba(6,182,212,0.25)' : 'none',
+                    filter: tipoLogin === 'usuario' ? 'blur(0.5px)' : 'none',
+                    zIndex: tipoLogin === 'usuario' ? 2 : 1
+                  }}
+                >
+                  Usuario
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipoLogin('fundacion')}
+                  className="rol-btn-login"
+                  style={{
+                    background: tipoLogin === 'fundacion' ? '#06b6d4' : '#eee',
+                    color: tipoLogin === 'fundacion' ? '#fff' : '#333',
+                    border: 'none',
+                    outline: 'none',
+                    borderRadius: '0 16px 16px 0',
+                    padding: '10px 24px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s, color 0.3s, box-shadow 0.3s, filter 0.3s, transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                    transform: tipoLogin === 'fundacion' ? 'scale(1.15) translateY(-4px)' : 'scale(1)',
+                    boxShadow: tipoLogin === 'fundacion' ? '0 6px 24px 0 rgba(6,182,212,0.25)' : 'none',
+                    filter: tipoLogin === 'fundacion' ? 'blur(0.5px)' : 'none',
+                    zIndex: tipoLogin === 'fundacion' ? 2 : 1
+                  }}
+                >
+                  Fundación
+                </button>
+                <style>{`
+                  .rol-btn-login:hover {
+                    background: #0891b2 !important;
+                    color: #fff !important;
+                    box-shadow: 0 8px 24px 0 #06b6d499;
+                    transform: scale(1.08) translateY(-2px);
+                  }
+                `}</style>
+              </div>
+              {/* Campos y links */}
+              <div>
+                <form onSubmit={handleSubmit} style={styles.form}>
+                  {error && (
+                    <div style={{
+                      color: '#ef4444',
+                      backgroundColor: '#fee2e2',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      marginBottom: '16px',
+                      textAlign: 'center'
+                    }}>
+                      {error}
+                    </div>
+                  )}
+                  {/* Email input */}
+                  <div style={styles.inputContainer}>
+                    <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder={tipoLogin === 'usuario' ? 'Número de Identificación' : 'NIT'}
+                      value={email}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/[^0-9]/g, '');
+                        setEmail(value);
+                      }}
+                      required
+                      style={styles.input}
+                    />
+                  </div>
+                  {/* Password input */}
+                  <div style={styles.inputContainer}>
+                    <svg style={styles.inputIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Contraseña"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      style={{...styles.input, ...styles.inputPassword}}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      onMouseEnter={() => setIsPasswordToggleHovered(true)}
+                      onMouseLeave={() => setIsPasswordToggleHovered(false)}
+                      style={{
+                        ...styles.togglePassword,
+                        ...(isPasswordToggleHovered ? styles.togglePasswordHover : {})
+                      }}
+                    >
+                      {showPassword ? (
+                        <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      ) : (
+                        <svg width="24" height="24" style={{ display: 'block', margin: 0, padding: 0 }} fill="none" viewBox="0 0 24 24" stroke="#06b6d4">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12s4-7 9-7 9 7 9 7-4 7-9 7-9-7-9-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.5 9.5l5 5m0-5l-5 5" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {/* Login button */}
+                  <button
+                    type="submit"
+                    onMouseEnter={() => setIsLoginHovered(true)}
+                    onMouseLeave={() => setIsLoginHovered(false)}
+                    style={{
+                      ...styles.loginButton,
+                      ...(isLoginHovered ? styles.loginButtonHover : {})
+                    }}
+                    className="loginButton"
+                  >
+                    Iniciar sesión
+                    <span className="paw-icon">
+                      <img src={huella} alt="huella" style={{ width: '28px', height: '28px', marginLeft: '8px', verticalAlign: 'middle' }} />
+                    </span>
+                  </button>
+                  {/* Link para cambiar a registro debajo del botón */}
+                  <div style={{ textAlign: 'center', marginTop: 18 }}>
+                    <span
+                      onClick={onSwitchToRegister}
+                      style={{
+                        color: '#0891b2',
+                        fontSize: '16px',
+                        textDecoration: 'underline',
+                        textDecorationColor: '#0891b2',
+                        margin: '12px 0',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        display: 'inline-block',
+                        padding: '4px 0',
+                        borderRadius: '8px'
+                      }}
+                      className="login-link-anim"
+                    >
+                      ¿No tienes cuenta? Regístrate aquí
+                    </span>
+                    <style>{`
+                      .login-link-anim:hover {
+                        color: #0f766e !important;
+                        text-decoration-color: #0f766e !important;
+                        background: #e0f7fa;
+                        transform: scale(1.06);
+                        transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+                      }
+                    `}</style>
+                  </div>
+                </form>
+                <div style={styles.decorativeElement1}></div>
+                <div style={styles.decorativeElement2}></div>
+                <div style={styles.decorativeElement3}></div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <style>{`
+        .rol-selector-btn {
+          transition: background 0.3s, color 0.3s, transform 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+        .rol-selector-btn.active {
+          transform: scale(1.08);
+        }
+      `}</style>
     </div>
   );
 }
