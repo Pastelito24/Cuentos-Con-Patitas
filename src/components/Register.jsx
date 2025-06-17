@@ -186,30 +186,60 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
         zIndex: 3,
         width: '100%',
         maxWidth: 340,
-        minHeight: '95vh',
+        minHeight: tipoRegistro === 'fundacion' ? 'unset' : '95vh',
         margin: '32px auto',
         borderRadius: 32,
-        padding: '64px 0',
-        background: 'rgba(179, 218, 255, 0.65)', // Fondo glassmorphism azul translúcido y transparente
+        padding: tipoRegistro === 'fundacion' ? '8px 0 12px 0' : '64px 0',
+        background: 'rgba(179, 218, 255, 0.65)',
         boxShadow: '0 10px 40px rgba(238, 238, 238, 0.87)',
         border: '1.5px solid rgba(255, 255, 255, 0.9)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)'
       }}>
-        {/* HEADER SIEMPRE VISIBLE */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '32px'
-        }}>
-          <div style={{ width: '120px', height: '120px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', boxShadow: '0 6px 10px -3px rgba(0,0,0,0.1)' }}>
+        {/* LOGO SIEMPRE VISIBLE Y CENTRADO */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 0 8px 0' }}>
+          <div style={{ width: '120px', height: '120px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 10px -3px rgba(0,0,0,0.1)' }}>
             <img src={logo} alt="Logo" style={{ width: '100px', height: '100px', objectFit: 'contain', display: 'block' }} />
           </div>
-          <h2 style={{ color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, fontFamily: "'Baloo 2', Arial, sans-serif", letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>
-            {tipoRegistro === 'usuario' && 'Registro de Usuario - Persona Natural'}
+        </div>
+        {/* HEADER SIEMPRE VISIBLE */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: tipoRegistro === 'fundacion' ? '8px' : '32px',
+            paddingTop: '0',
+            paddingBottom: '0',
+          }}
+        >
+          <h2
+            style={{
+              color: '#B87C4C',
+              fontWeight: 'bold',
+              fontSize: '1.4rem',
+              margin: tipoRegistro === 'fundacion' ? '0 0 4px 0' : '0',
+              fontFamily: "'Baloo 2', Arial, sans-serif",
+              letterSpacing: '1px',
+              textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)',
+              textAlign: 'center',
+            }}
+          >
+            {tipoRegistro === 'usuario' && 'Registro de Usuario'}
             {tipoRegistro === 'fundacion' && 'Registro de Fundación'}
             {!tipoRegistro && 'Cuentos Con Patitas'}
           </h2>
-          <p style={{ color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
+          <p
+            style={{
+              color: '#14b8a6',
+              fontWeight: 'bold',
+              margin: tipoRegistro === 'fundacion' ? '2px 0 8px 0' : '8px 0 18px 0',
+              fontSize: '1.05rem',
+              textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)',
+              textAlign: 'center',
+            }}
+          >
             "Cada huellita tiene una historia... ¡Crea la tuya!"
           </p>
         </div>
@@ -457,6 +487,12 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
                 text-decoration-color: #b87c4c !important;
                 text-shadow: 0 2px 8px #ffe06655;
                 transform: scale(1.06) translateY(-2px);
+              }
+              form {
+                gap: 12px !important;
+              }
+              form input {
+                margin-bottom: 0 !important;
               }
             `}</style>
           </motion.form>

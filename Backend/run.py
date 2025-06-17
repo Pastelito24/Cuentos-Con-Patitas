@@ -53,7 +53,14 @@ def login():
                     'status': 'success',
                     'message': 'Login exitoso',
                     'user': {
-                        'cedula': usuario_logeado.cedula
+                        'cedula': usuario_logeado.cedula,
+                        'nombre': usuario_logeado.nombre,
+                        'email': usuario_logeado.email,
+                        'rol': usuario_logeado.rol,
+                        'telefono': usuario_logeado.telefono,
+                        'direccion': usuario_logeado.direccion,
+                        'edad': usuario_logeado.edad,
+                        'fundacion_id': usuario_logeado.fundacion_id
                     }
                 }), 200
             else:

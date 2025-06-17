@@ -83,7 +83,9 @@ export default function Home() {
             <a href="#" style={styles.link} onClick={() => navigate('/adopta')}>Adopta</a>
             <a href="#" style={styles.link} onClick={() => navigate('/ayuda')}>¿Quieres Ayudar?</a>
             <a href="#" style={styles.link} onClick={() => navigate('/soporte')}>Soporte</a>
+            <a href="#" style={styles.link} onClick={() => navigate('/donaciones')}>Donaciones</a>
             <a href="#" style={styles.link} onClick={() => navigate('/cuenta')}>Mi cuenta</a>
+            <a href="#" style={styles.link} onClick={() => navigate('/quienes-somos')}>¿Quienes Somos?</a>
             <a href="#" style={styles.link}>
               <img src="/assets/lupa_busqueda.jpg" alt="Buscar" style={{ height: '20px', marginRight: '5px' }} />
               ¿Buscas alguna fundación?

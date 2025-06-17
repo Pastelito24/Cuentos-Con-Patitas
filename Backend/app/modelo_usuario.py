@@ -7,7 +7,7 @@ class Modelo_usuario():
     def comprobar_user(self, db, user):
         try:
             cursor = db.connection.cursor()
-            sql = "SELECT cedula, contrasena FROM usuarios WHERE cedula = %s"
+            sql = "SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id FROM usuarios WHERE cedula = %s"
             cursor.execute(sql, (user.cedula,))
             row = cursor.fetchone()
             print("Consulta SQL:", sql, "Valor:", user.cedula)
@@ -17,7 +17,7 @@ class Modelo_usuario():
                 print("Contraseña en BD:", row[1])
                 if check_password_hash(row[1], user.contrasena):
                     print("Contraseña válida")
-                    return Usuario(row[0], row[1])
+                    return Usuario(*row)
                 else:
                     print("Contraseña inválida")
                     return None
