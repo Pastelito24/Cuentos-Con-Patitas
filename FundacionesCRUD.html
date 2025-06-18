@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CRUD Fundaciones</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        form { margin-bottom: 20px; }
+        input, button { margin: 4px; padding: 6px; }
+    </style>
+</head>
+<body>
+    <h1>Gestión de Fundaciones</h1>
+    <form id="fundacionForm">
+        <input type="text" id="nit" placeholder="NIT" required readonly>
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="text" id="direccion" placeholder="Dirección" required>
+        <input type="text" id="telefono" placeholder="Teléfono" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="persona_acargo" placeholder="Persona a Cargo" required>
+        <input type="password" id="contrasena" placeholder="Nueva Contraseña (opcional)">
+        <button type="submit">Actualizar Fundación</button>
+    </form>
+    <table id="fundacionesTable">
+        <thead>
+            <tr>
+                <th>NIT</th><th>Nombre</th><th>Dirección</th><th>Teléfono</th><th>Email</th><th>Persona a Cargo</th><th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        const apiUrl = 'http://localhost:5000/api/fundaciones/';
+        const form = document.getElementById('fundacionForm');
+        const tableBody = document.querySelector('#fundacionesTable tbody');
+
+        function fetchFundacion(nit) {
+            return fetch(apiUrl + nit).then(r => r.json());
+        }
+
+        function renderFundacionRow(fundacion) {
+            return `<tr>
+                <td>${fundacion.nit}</td>
+                <td>${fundacion.nombre}</td>
+                <td>${fundacion.direccion}</td>
+                <td>${fundacion.telefono}</td>
+                <td>${fundacion.email}</td>
+                <td>${fundacion.persona_acargo}</td>
+                <td>
+                    <button onclick="editFundacion('${fundacion.nit}')">Editar</button>
+                    <button onclick="deleteFundacion('${fundacion.nit}')">Eliminar</button>
+                </td>
+            </tr>`;
+        }
+
+        function loadFundaciones() {
+            tableBody.innerHTML = '';
+            fetch('http://localhost:5000/api/fundaciones')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        res.fundaciones.forEach(fundacion => {
+                            tableBody.innerHTML += renderFundacionRow(fundacion);
+                        });
+                    }
+                });
+        }
+
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const nit = document.getElementById('nit').value;
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                direccion: document.getElementById('direccion').value,
+                telefono: document.getElementById('telefono').value,
+                email: document.getElementById('email').value,
+                persona_acargo: document.getElementById('persona_acargo').value
+            };
+            const nuevaContrasena = document.getElementById('contrasena').value;
+            if (nuevaContrasena) data.contrasena = nuevaContrasena;
+            fetch(apiUrl + nit, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(res => {
+                alert(res.message);
+                loadFundaciones();
+            });
+        };
+
+        window.editFundacion = function(nit) {
+            fetchFundacion(nit).then(res => {
+                if (res.status === 'success') {
+                    const f = res.fundacion;
+                    document.getElementById('nit').value = f.nit;
+                    document.getElementById('nombre').value = f.nombre;
+                    document.getElementById('direccion').value = f.direccion;
+                    document.getElementById('telefono').value = f.telefono;
+                    document.getElementById('email').value = f.email;
+                    document.getElementById('persona_acargo').value = f.persona_acargo;
+                    document.getElementById('contrasena').value = '';
+                }
+            });
+        };
+
+        window.deleteFundacion = function(nit) {
+            if (confirm('¿Eliminar fundación?')) {
+                fetch(apiUrl + nit, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(res => {
+                    alert(res.message);
+                    loadFundaciones();
+                });
+            }
+        };
+
+        loadFundaciones();
+    </script>
+</body>
+</html> 

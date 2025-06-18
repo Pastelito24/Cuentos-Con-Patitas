@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CRUD Usuarios</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        form { margin-bottom: 20px; }
+        input, button { margin: 4px; padding: 6px; }
+    </style>
+</head>
+<body>
+    <h1>Gestión de Usuarios</h1>
+    <form id="usuarioForm">
+        <input type="text" id="cedula" placeholder="Cédula" required readonly>
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="text" id="telefono" placeholder="Teléfono" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="direccion" placeholder="Dirección" required>
+        <input type="number" id="edad" placeholder="Edad" required>
+        <input type="text" id="rol" placeholder="Rol" required>
+        <input type="text" id="fundacion_id" placeholder="Fundación ID">
+        <input type="password" id="contrasena" placeholder="Nueva Contraseña (opcional)">
+        <button type="submit">Actualizar Usuario</button>
+    </form>
+    <table id="usuariosTable">
+        <thead>
+            <tr>
+                <th>Cédula</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Dirección</th><th>Edad</th><th>Rol</th><th>Fundación ID</th><th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        const apiUrl = 'http://localhost:5000/api/usuarios/';
+        const form = document.getElementById('usuarioForm');
+        const tableBody = document.querySelector('#usuariosTable tbody');
+
+        function fetchUsuario(cedula) {
+            return fetch(apiUrl + cedula).then(r => r.json());
+        }
+
+        function renderUsuarioRow(usuario) {
+            return `<tr>
+                <td>${usuario.cedula}</td>
+                <td>${usuario.nombre}</td>
+                <td>${usuario.telefono}</td>
+                <td>${usuario.email}</td>
+                <td>${usuario.direccion}</td>
+                <td>${usuario.edad}</td>
+                <td>${usuario.rol}</td>
+                <td>${usuario.fundacion_id || ''}</td>
+                <td>
+                    <button onclick="editUsuario('${usuario.cedula}')">Editar</button>
+                    <button onclick="deleteUsuario('${usuario.cedula}')">Eliminar</button>
+                </td>
+            </tr>`;
+        }
+
+        function loadUsuarios() {
+            tableBody.innerHTML = '';
+            fetch('http://localhost:5000/api/usuarios')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        res.usuarios.forEach(usuario => {
+                            tableBody.innerHTML += renderUsuarioRow(usuario);
+                        });
+                    }
+                });
+        }
+
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const cedula = document.getElementById('cedula').value;
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                telefono: document.getElementById('telefono').value,
+                email: document.getElementById('email').value,
+                direccion: document.getElementById('direccion').value,
+                edad: document.getElementById('edad').value,
+                rol: document.getElementById('rol').value,
+                fundacion_id: document.getElementById('fundacion_id').value
+            };
+            const nuevaContrasena = document.getElementById('contrasena').value;
+            if (nuevaContrasena) data.contrasena = nuevaContrasena;
+            fetch(apiUrl + cedula, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(res => {
+                alert(res.message);
+                loadUsuarios();
+            });
+        };
+
+        window.editUsuario = function(cedula) {
+            fetchUsuario(cedula).then(res => {
+                if (res.status === 'success') {
+                    const u = res.usuario;
+                    document.getElementById('cedula').value = u.cedula;
+                    document.getElementById('nombre').value = u.nombre;
+                    document.getElementById('telefono').value = u.telefono;
+                    document.getElementById('email').value = u.email;
+                    document.getElementById('direccion').value = u.direccion;
+                    document.getElementById('edad').value = u.edad;
+                    document.getElementById('rol').value = u.rol;
+                    document.getElementById('fundacion_id').value = u.fundacion_id || '';
+                    document.getElementById('contrasena').value = '';
+                }
+            });
+        };
+
+        window.deleteUsuario = function(cedula) {
+            if (confirm('¿Eliminar usuario?')) {
+                fetch(apiUrl + cedula, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(res => {
+                    alert(res.message);
+                    loadUsuarios();
+                });
+            }
+        };
+
+        loadUsuarios();
+    </script>
+</body>
+</html> 

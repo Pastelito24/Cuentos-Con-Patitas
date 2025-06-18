@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CRUD Eventos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        form { margin-bottom: 20px; }
+        input, button { margin: 4px; padding: 6px; }
+    </style>
+</head>
+<body>
+    <h1>CREACION DE EVENTOS</h1>
+    <form id="EventoF">
+    
+        <input type="text" id="nombreEvento" placeholder="Nombre del Evento" required>
+        <input type="text" id="nombreLugar" placeholder="nombre del Lugar" required>
+        <input type="text" id="fecha" placeholder="Fecha del evento" required>
+        <input type="text" id="hora" placeholder="Hora del evento" required>
+        <input type= "text" id="descripcion" placeholder="Descripcion del evento">
+        <button type="submit">CREAR</button>
+    </form>
+    <table id="EventosTable">
+        <thead>
+            <tr>
+                <th>fundacion_id</th><th>nombreEvento</th><th>nombreLugar</th><th>fecha del evento</th><th>hora del evento</th><th>Descripcion del evento</th><th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        const apiUrl = 'http://localhost:5000/api/fundaciones/';
+        const form = document.getElementById('EventoF');
+        const tableBody = document.querySelector('#EventosTable tbody');
+
+        function fetchFundacion(nit) {
+            return fetch(apiUrl + nit).then(r => r.json());
+        }
+
+        function renderEventosRow(Evento) {
+            return `<tr>
+                <td>${Evento.fundacion_id}</td>
+                <td>${Evento.nombreEvento}</td>
+                <td>${Evento.nombreLugar}</td>
+                <td>${Evento.fecha}</td>
+                <td>${Evento.hora}</td>
+                <td>${Evento.Descripcion}</td>
+                <td>
+                    <button onclick="editEvento('${Evento.fundacion_id}')">Editar</button>
+                    <button onclick="deleteEvento('${Evento.fundacion_id}')">Eliminar</button>
+                </td>
+            </tr>`;
+        }
+
+        function loadEventos() {
+            tableBody.innerHTML = '';
+            fetch('http://localhost:5000/api/fundaciones')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        res.Eventos.forEach(Evento => {
+                            tableBody.innerHTML += renderEventosRow(Evento);
+                        });
+                    }
+                });
+        }
+
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const fundacion_id = document.getElementById('fundacion_id').value;
+            const data = {
+                nombreEvento: document.getElementById('nombreEvento').value,
+                nombreLugar: document.getElementById('nombreLugar').value,
+                fecha: document.getElementById('fecha').value,
+                hora: document.getElementById('hora').value,
+                Descripcion: document.getElementById('descripcion').value
+            };
+            }
+            .then(r => r.json())
+            .then(res => {
+                alert(res.message);
+                loadEventos();
+            });
+        window.editEventos = function(fundacion_id) {
+            fetchEventos(fundacion_id).then(res => {
+                if (res.status === 'success') {
+                    const v = res.Evento;
+                    document.getElementById('fundacion_id').value = v.fundacion_id;
+                    document.getElementById('nombreEvento').value = v.nombreEvento;
+                    document.getElementById('nombreLugar').value = v.nombreLugar;
+                    document.getElementById('fecha').value = v.fecha;
+                    document.getElementById('hora').value = v.hora;
+                    document.getElementById('descripcion').value = v.Descripcion;
+                }
+            });
+        };
+
+        window.deleteFundacion = function(fundacion_id) {
+            if (confirm('¿Eliminar el evento?')) {
+                fetch(apiUrl + fundacion_id, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(res => {
+                    alert(res.message);
+                    loadEventos();
+                });
+            }
+        };
+
+        loadEventos();
+    </script>
+</body>
+</html> 
