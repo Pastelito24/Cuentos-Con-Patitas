@@ -4,6 +4,7 @@ import Login from './components/login';
 import Register from './components/Register';
 import Home from './components/Home';
 import Bienvenida from './components/Bienvenida';
+import MiCuenta from './components/MiCuenta';
 import './App.css'; // Asegúrate de importar los estilos globales
 import backgroundImage from './assets/img/fondoperrogato.jpg';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -86,6 +87,10 @@ function BackgroundWithRoutes() {
         <Route
           path="/index1"
           element={isAuthenticated ? <Bienvenida /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/micuenta"
+          element={isAuthenticated ? <MiCuenta /> : <Navigate to="/" replace />}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

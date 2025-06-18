@@ -90,7 +90,7 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
       padding: '0',
       position: 'relative',
       overflow: 'hidden',
-      fontFamily: "'Baloo 2', Arial, sans-serif"
+      fontFamily: '"Edu NSW ACT Hand Pre", cursive'
     },
     background: {
       position: 'absolute',
@@ -137,7 +137,7 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
       fontSize: '48px'
     },
     title: {
-      fontFamily: "'Baloo 2', Arial, sans-serif",
+      fontFamily: '"Edu NSW ACT Hand Pre", cursive',
       fontSize: '48px',
       fontWeight: 'bold',
       color: '#B87C4C',
@@ -151,7 +151,8 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
     btitle: {
       fontSize: '22px',
       color: '#333',
-      textShadow: '0 1px 2px rgba(255,255,255,0.5)'
+      textShadow: '0 1px 2px rgba(255,255,255,0.5)',
+      fontFamily: '"Edu NSW ACT Hand Pre", cursive',
     },
     form: {
       display: 'flex',
@@ -182,7 +183,8 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
       outline: 'none',
       backdropFilter: 'blur(4px)',
       transition: 'all 0.3s ease',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      fontFamily: '"Edu NSW ACT Hand Pre", cursive',
     },
     inputPassword: {
       paddingRight: '56px'
@@ -355,10 +357,10 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
                 <div style={{ width: '140px', height: '140px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
                   <img src={logo} alt="Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', display: 'block' }} />
                 </div>
-                <h2 style={{ color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, fontFamily: "'Baloo 2', Arial, sans-serif", letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>Cuentos Con Patitas</h2>
-                <p style={{ color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
+                <div style={{ ...styles.title, fontFamily: '"Edu NSW ACT Hand Pre", cursive' }}>Cuentos Con Patitas</div>
+                <div style={{ ...styles.btitle, fontFamily: '"Edu NSW ACT Hand Pre", cursive' }}>
                   "Cada huellita tiene una historia... ¡Crea la tuya!"
-                </p>
+                </div>
               </div>
               {/* Selector de tipo de login */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
@@ -648,10 +650,10 @@ export function LoginContent(props) {
                 <div style={{ width: '140px', height: '140px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
                   <img src={logo} alt="Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', display: 'block' }} />
                 </div>
-                <h2 style={{ color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, fontFamily: "'Baloo 2', Arial, sans-serif", letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>Cuentos Con Patitas</h2>
-                <p style={{ color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
+                <div style={{ ...styles.title, fontFamily: '"Edu NSW ACT Hand Pre", cursive' }}>Cuentos Con Patitas</div>
+                <div style={{ ...styles.btitle, fontFamily: '"Edu NSW ACT Hand Pre", cursive' }}>
                   "Cada huellita tiene una historia... ¡Crea la tuya!"
-                </p>
+                </div>
               </div>
               {/* Selector de tipo de login */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>

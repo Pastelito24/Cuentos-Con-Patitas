@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import corgiAbrazo from '../assets/img/corgiabrazo.png';
 import corgiCulon from '../assets/img/corgiculon.png';
 
 const socialLinks = [
-  { href: '#', icon: 'fa-brands fa-linkedin' },
-  { href: '#', icon: 'fa-brands fa-github' },
+  { href: '#', icon: 'fa-brands fa-whatsapp' },
+  { href: '#', icon: 'fa-brands fa-facebook' },
   { href: '#', icon: 'fa-brands fa-x-twitter' },
   { href: '#', icon: 'fa-brands fa-instagram' },
 ];
@@ -55,11 +56,26 @@ const fetchNombreUsuario = async (user) => {
 
 const Bienvenida = () => {
   const [nombre, setNombre] = useState('Patitas');
+  const [showBubble, setShowBubble] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const user = getUserFromLocalStorage();
     fetchNombreUsuario(user).then(setNombre);
   }, []);
+
+  // Ocultar la burbuja automáticamente después de 2.5 segundos
+  useEffect(() => {
+    if (showBubble) {
+      const timer = setTimeout(() => setShowBubble(false), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showBubble]);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/');
+  };
 
   return (
     <div style={{
@@ -97,12 +113,45 @@ const Bienvenida = () => {
             fontFamily: '"Edu NSW ACT Hand Pre", cursive',
             transition: 'color 0.3s',
           }}>Cuentos Con Patitas</a>
-          <nav style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
-            <a href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>¿Quienes Somos?</a>
-            <a href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>Fundaciones</a>
-            <a href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>¿Quieres Ayudar?</a>
-            <a href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>Soporte</a>
-            <a href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>Mi cuenta</a>
+          <nav style={{ display: 'flex', gap: 28, alignItems: 'center', position: 'relative' }}>
+            <a className="nav-link-animada" href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>¿Quienes Somos?</a>
+            <a className="nav-link-animada" href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>Fundaciones</a>
+            <a className="nav-link-animada" href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>¿Quieres Ayudar?</a>
+            <a className="nav-link-animada" href="#" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>Soporte</a>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <Link className="nav-link-animada" to="/micuenta" style={{ color: COLORS.texto, textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem', cursor: 'pointer' }}>
+                Mi cuenta
+              </Link>
+              <div className="logout-dropdown" style={{
+                display: 'none',
+                position: 'absolute',
+                top: '110%',
+                right: 0,
+                background: '#fff',
+                borderRadius: 10,
+                boxShadow: '0 4px 16px #0001',
+                padding: '8px 0',
+                minWidth: 140,
+                zIndex: 100,
+                textAlign: 'center',
+              }}>
+                <button onClick={handleLogout} style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#E28F54',
+                  fontWeight: 'bold',
+                  fontSize: '1.08rem',
+                  padding: '10px 0',
+                  width: '100%',
+                  cursor: 'pointer',
+                  borderRadius: 8,
+                  transition: 'background 0.2s',
+                }}
+                onMouseOver={e => e.currentTarget.style.background = '#FFF8F0'}
+                onMouseOut={e => e.currentTarget.style.background = 'none'}
+                >Cerrar sesión</button>
+              </div>
+            </div>
             {/* Barra de búsqueda estética */}
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               {/* Orejas de gato */}
@@ -234,7 +283,7 @@ Explora, conecta y ayúdanos a escribir finales felices... una patita a la vez.`
           <div style={{ display: 'flex', gap: 18, marginBottom: 24 }}>
             {socialLinks.map((s, i) => (
               <a key={i} href={s.href} style={{ color: COLORS.acento, fontSize: 28, transition: 'color 0.2s' }} target="_blank" rel="noopener noreferrer">
-                <i className={s.icon}></i>
+                <i className={s.icon + (s.icon.includes('whatsapp') ? ' icon-whatsapp-ajustado' : '')}></i>
               </a>
             ))}
           </div>
@@ -255,17 +304,96 @@ Explora, conecta y ayúdanos a escribir finales felices... una patita a la vez.`
         </div>
       </section>
       {/* Imagen de corgiculón en la esquina inferior derecha */}
-      <img src={corgiCulon} alt="Corgi culón" style={{
-        position: 'fixed',
-        right: 24,
-        bottom: 18,
-        width: 120,
-        zIndex: 50,
-        pointerEvents: 'none',
-        opacity: 0.97,
-      }} />
+      <div style={{ position: 'fixed', right: 24, bottom: 18, zIndex: 51 }}>
+        {showBubble && (
+          <div style={{
+            position: 'absolute',
+            bottom: 170,
+            right: 10,
+            background: '#fff',
+            color: '#E28F54',
+            borderRadius: 18,
+            padding: '12px 22px',
+            boxShadow: '0 4px 18px #E28F5444',
+            fontWeight: 'bold',
+            fontSize: '1.08rem',
+            fontFamily: 'inherit',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            animation: 'bubbleIn 0.25s',
+          }}>
+            Ey, donde estas tocando
+            <span style={{
+              position: 'absolute',
+              left: '88%',
+              bottom: -16,
+              width: 0,
+              height: 0,
+              borderLeft: '10px solid transparent',
+              borderRight: '10px solid transparent',
+              borderTop: '16px solid #fff',
+              filter: 'drop-shadow(0 2px 4px #E28F5444)'
+            }}></span>
+          </div>
+        )}
+        <img
+          src={corgiCulon}
+          alt="Corgi culón"
+          style={{
+            width: 120,
+            cursor: 'pointer',
+            opacity: 0.97,
+            zIndex: 50,
+          }}
+          onClick={() => setShowBubble(true)}
+        />
+      </div>
       {/* Tipografía para iconos FontAwesome */}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+      {/* Estilos animados para el navbar */}
+      <style>{`
+        .nav-link-animada {
+          position: relative;
+          transition: color 0.2s, filter 0.2s;
+        }
+        .nav-link-animada::after {
+          content: '';
+          position: absolute;
+          left: 0; right: 0; bottom: -3px;
+          height: 3px;
+          border-radius: 2px;
+          background: linear-gradient(90deg, #A7C7E7 0%, #E28F54 100%);
+          opacity: 0;
+          transform: scaleX(0.7);
+          transition: opacity 0.2s, transform 0.2s;
+        }
+        .nav-link-animada:hover {
+          color: #E28F54;
+          filter: drop-shadow(0 2px 8px #E28F5444);
+        }
+        .nav-link-animada:hover::after {
+          opacity: 1;
+          transform: scaleX(1);
+        }
+        .logout-dropdown {
+          display: none;
+        }
+        .nav-link-animada:hover + .logout-dropdown,
+        .logout-dropdown:hover {
+          display: block !important;
+        }
+        .logout-dropdown button:hover {
+          background: #FFF8F0;
+        }
+        .icon-whatsapp-ajustado {
+          transform: scale(1.18);
+          display: inline-block;
+        }
+        @keyframes bubbleIn {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   );
 };

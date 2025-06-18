@@ -179,7 +179,7 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative', overflow: 'hidden', fontFamily: "'Baloo 2', Arial, sans-serif" }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'relative', overflow: 'hidden', fontFamily: '"Edu NSW ACT Hand Pre", cursive' }}>
       <div style={{ position: 'absolute', top: -150, left: -200, right: -200, bottom: -180, backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', zIndex: 0, pointerEvents: 'none' }} />
       <div style={{
         position: 'relative',
@@ -194,54 +194,16 @@ function Register({ onSwitchToLogin, onFormSubmit }) {
         boxShadow: '0 10px 40px rgba(238, 238, 238, 0.87)',
         border: '1.5px solid rgba(255, 255, 255, 0.9)',
         backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)'
+        WebkitBackdropFilter: 'blur(16px)',
+        fontFamily: '"Edu NSW ACT Hand Pre", cursive',
       }}>
         {/* LOGO SIEMPRE VISIBLE Y CENTRADO */}
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 0 8px 0' }}>
-          <div style={{ width: '120px', height: '120px', backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 10px -3px rgba(0,0,0,0.1)' }}>
-            <img src={logo} alt="Logo" style={{ width: '100px', height: '100px', objectFit: 'contain', display: 'block' }} />
-          </div>
+          <img src={logo} alt="Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', display: 'block' }} />
         </div>
-        {/* HEADER SIEMPRE VISIBLE */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: tipoRegistro === 'fundacion' ? '8px' : '32px',
-            paddingTop: '0',
-            paddingBottom: '0',
-          }}
-        >
-          <h2
-            style={{
-              color: '#B87C4C',
-              fontWeight: 'bold',
-              fontSize: '1.4rem',
-              margin: tipoRegistro === 'fundacion' ? '0 0 4px 0' : '0',
-              fontFamily: "'Baloo 2', Arial, sans-serif",
-              letterSpacing: '1px',
-              textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)',
-              textAlign: 'center',
-            }}
-          >
-            {tipoRegistro === 'usuario' && 'Registro de Usuario'}
-            {tipoRegistro === 'fundacion' && 'Registro de Fundación'}
-            {!tipoRegistro && 'Cuentos Con Patitas'}
-          </h2>
-          <p
-            style={{
-              color: '#14b8a6',
-              fontWeight: 'bold',
-              margin: tipoRegistro === 'fundacion' ? '2px 0 8px 0' : '8px 0 18px 0',
-              fontSize: '1.05rem',
-              textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)',
-              textAlign: 'center',
-            }}
-          >
-            "Cada huellita tiene una historia... ¡Crea la tuya!"
-          </p>
+        <div style={{ fontFamily: '"Edu NSW ACT Hand Pre", cursive', color: '#B87C4C', fontWeight: 'bold', fontSize: '2.2rem', margin: 0, letterSpacing: '1px', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.1)' }}>Cuentos Con Patitas</div>
+        <div style={{ fontFamily: '"Edu NSW ACT Hand Pre", cursive', color: '#14b8a6', fontWeight: 'bold', margin: '8px 0 18px 0', fontSize: '1.1rem', textShadow: '1px 1px 0 #fff, 0 2px 8px rgba(0,0,0,0.06)' }}>
+          "Cada huellita tiene una historia... ¡Crea la tuya!"
         </div>
         {/* FORMULARIO O SELECCIÓN DE TIPO */}
         {!tipoRegistro ? (
