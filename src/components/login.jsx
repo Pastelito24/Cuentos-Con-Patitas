@@ -39,6 +39,7 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...(tipoLogin === 'usuario' ? { email } : { nit: email }),
           password,

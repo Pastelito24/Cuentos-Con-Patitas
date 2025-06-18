@@ -1,6 +1,8 @@
 from flask import jsonify, request
+from .fundacion_adicion import fundacion_bp
 
 def register_routes(app):
+    app.register_blueprint(fundacion_bp)
     @app.route('/')
     def index():
         return 'API Flask funcionando ✅'

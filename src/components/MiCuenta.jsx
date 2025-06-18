@@ -4,6 +4,7 @@ import gatitoLloron from '../assets/img/Gatito_Lloron.png';
 import { FaUserEdit, FaCommentDots, FaHeart, FaComments } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import '../App.css';
+import logoSinTexto from '../assets/img/logosintexto.png';
 
 const iconColor = '#FFA94D';
 
@@ -101,7 +102,7 @@ const MiCuenta = () => {
       {/* <Navbar /> */}
       <header style={{
         width: '100vw',
-        background: 'transparent',
+        background: '#A7D0F5',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -116,23 +117,25 @@ const MiCuenta = () => {
           alignItems: 'center',
           padding: '12px 4vw 0 4vw',
         }}>
-          <Link to="/index1" style={{
-            color: '#A7C7E7',
-            fontWeight: 'bold',
-            fontSize: '2.5rem',
-            letterSpacing: '2px',
-            textDecoration: 'none',
-            whiteSpace: 'pre-line',
-            fontFamily: '"Edu NSW ACT Hand Pre", cursive',
-            transition: 'color 0.3s',
-          }}>Cuentos Con Patitas</Link>
-          <nav style={{ display: 'flex', gap: 28, alignItems: 'center', position: 'relative' }}>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>¿Quienes Somos?</a>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>Fundaciones</a>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>¿Quieres Ayudar?</a>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem' }}>Soporte</a>
+          {/* Logo y texto apilado */}
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 24, marginLeft: -150, cursor: 'pointer' }}
+            onClick={() => navigate('/index1')}
+            className="logo-titulo-navbar"
+          >
+            <img src={logoSinTexto} alt="Logo Cuentos Con Patitas" style={{ width: 130, height: 130, objectFit: 'contain', marginRight: 12 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
+              <span className="titulo-navbar-superior" style={{ color: '#4B3A2D', fontWeight: 'bold', fontSize: '2.3rem', letterSpacing: '2px', fontFamily: '"Edu NSW ACT Hand Pre", cursive' }}>Cuentos Con</span>
+              <span className="titulo-navbar-inferior" style={{ color: '#4B3A2D', fontWeight: 'bold', fontSize: '2.7rem', letterSpacing: '2px', fontFamily: '"Edu NSW ACT Hand Pre", cursive', marginTop: 4 }}>Patitas</span>
+            </div>
+          </div>
+          <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
+            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quienes Somos?</a>
+            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Fundaciones</a>
+            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quieres Ayudar?</a>
+            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
             <div style={{ position: 'relative', display: 'inline-block' }}>
-              <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.05rem', cursor: 'pointer' }}>
+              <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
                 Mi cuenta
               </a>
               <div className="logout-dropdown" style={{
@@ -208,6 +211,31 @@ const MiCuenta = () => {
         }
         .logout-dropdown button:hover {
           background: #FFF8F0;
+        }
+        .logo-titulo-navbar span {
+          position: relative;
+          transition: color 0.2s;
+        }
+        .logo-titulo-navbar:hover .titulo-navbar-superior,
+        .logo-titulo-navbar:hover .titulo-navbar-inferior {
+          color: #E28F54;
+        }
+        .logo-titulo-navbar .titulo-navbar-superior::after,
+        .logo-titulo-navbar .titulo-navbar-inferior::after {
+          content: '';
+          position: absolute;
+          left: 0; right: 0; bottom: -6px;
+          height: 5px;
+          border-radius: 3px;
+          background: linear-gradient(90deg, #E28F54 0%, #A7D0F5 100%);
+          opacity: 0;
+          transform: scaleX(0.7);
+          transition: opacity 0.3s, transform 0.3s;
+        }
+        .logo-titulo-navbar:hover .titulo-navbar-superior::after,
+        .logo-titulo-navbar:hover .titulo-navbar-inferior::after {
+          opacity: 1;
+          transform: scaleX(1);
         }
       `}</style>
     </div>

@@ -7,9 +7,11 @@ from datetime import datetime
 import re
 import traceback
 from werkzeug.security import check_password_hash
+from flask_login import LoginManager, login_user
+from app.entidades.fundacion_user import FundacionUser
 
 app = create_app()
-CORS(app)  # Habilitar CORS para todas las rutas
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 app.config.from_object(configu['desarrolloConfig'])
 app.secret_key = 'cerrado123456'
 
@@ -22,6 +24,26 @@ from app.modelo_fundacion import Modelo_fundacion
 # entidades
 from app.entidades.usuario import Usuario
 
+# flask-login setup
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    # Buscar usuario normal
+    cursor = db.connection.cursor()
+    cursor.execute("SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id FROM usuarios WHERE cedula = %s", (user_id,))
+    row = cursor.fetchone()
+    if row:
+        user = Usuario(*row)
+        return user
+    # Buscar fundación por NIT
+    cursor.execute("SELECT nit, nombre, email FROM Fundaciones WHERE nit = %s", (user_id,))
+    fundacion = cursor.fetchone()
+    if fundacion:
+        return FundacionUser(fundacion[0], fundacion[1], fundacion[2])
+    return None
+
 @app.route('/')
 def home():
     return redirect(url_for('login'))
@@ -33,14 +55,18 @@ def login():
         rol = data.get('rol', 'usuario').lower()
         if rol == 'fundacion':
             cursor = db.connection.cursor()
-            cursor.execute("SELECT nit, contrasena FROM Fundaciones WHERE nit = %s", (data['nit'],))
+            cursor.execute("SELECT nit, nombre, email, contrasena FROM Fundaciones WHERE nit = %s", (data['nit'],))
             fundacion = cursor.fetchone()
-            if fundacion and check_password_hash(fundacion[1], data['password']):
+            if fundacion and check_password_hash(fundacion[3], data['password']):
+                user = FundacionUser(fundacion[0], fundacion[1], fundacion[2])
+                login_user(user)
                 return jsonify({
                     'status': 'success',
                     'message': 'Login exitoso',
                     'fundacion': {
-                        'nit': fundacion[0]
+                        'nit': fundacion[0],
+                        'nombre': fundacion[1],
+                        'email': fundacion[2]
                     }
                 }), 200
             else:
@@ -49,6 +75,7 @@ def login():
             user = Usuario(data['email'], data['password'])
             usuario_logeado = Modelo_usuario.comprobar_user(db, user)
             if usuario_logeado is not None:
+                login_user(usuario_logeado)
                 return jsonify({
                     'status': 'success',
                     'message': 'Login exitoso',

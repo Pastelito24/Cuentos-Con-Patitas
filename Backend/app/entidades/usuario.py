@@ -8,4 +8,19 @@ class Usuario:
         self.email = email
         self.direccion = direccion
         self.edad = edad
-        self.fundacion_id = fundacion_id 
+        self.fundacion_id = fundacion_id
+
+    def get_id(self):
+        return self.cedula
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False 

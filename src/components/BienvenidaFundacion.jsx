@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import logoSinTexto from '../assets/img/logosintexto.png';
 import corgiAbrazo from '../assets/img/corgiabrazo.png';
 import corgiCulon from '../assets/img/corgiculon.png';
-import logoSinTexto from '../assets/img/logosintexto.png';
+import ListaAnimales from './ListaAnimales';
+
+const COLORS = {
+  fondo: '#FFF8F0',
+  secundario: '#F4E2D8',
+  acento: '#E28F54',
+  contraste: '#A8D5BA',
+  contrasteOscuro: '#7C6C5F',
+  texto: '#4B3A2D',
+  textoSec: '#7C6C5F',
+};
 
 const socialLinks = [
   { href: '#', icon: 'fa-brands fa-whatsapp' },
@@ -11,61 +22,36 @@ const socialLinks = [
   { href: '#', icon: 'fa-brands fa-instagram' },
 ];
 
-// Colores sugeridos
-const COLORS = {
-  fondo: '#FFF8F0', // Marfil suave
-  secundario: '#F4E2D8', // Beige claro
-  acento: '#E28F54', // Naranja zanahoria
-  contraste: '#A8D5BA', // Verde agua pastel
-  contrasteOscuro: '#7C6C5F', // Marrón claro/beige oscuro (más oscuro para difuminado extra)
-  texto: '#4B3A2D', // Marrón oscuro cálido
-  textoSec: '#7C6C5F', // Marrón claro/beige oscuro
-};
-
-const getUserFromLocalStorage = () => {
+const getFundacionFromLocalStorage = () => {
   try {
-    const userRaw = localStorage.getItem('user');
-    if (!userRaw) return null;
-    let user = userRaw;
-    if (typeof userRaw === 'string' && (userRaw.startsWith('{') || userRaw.startsWith('"'))){
-      user = JSON.parse(userRaw);
+    const fundacionRaw = localStorage.getItem('fundacion');
+    if (!fundacionRaw) return null;
+    let fundacion = fundacionRaw;
+    if (typeof fundacionRaw === 'string' && (fundacionRaw.startsWith('{') || fundacionRaw.startsWith('"'))){
+      fundacion = JSON.parse(fundacionRaw);
     }
-    return user;
+    return fundacion;
   } catch {
     return null;
   }
 };
 
-const fetchNombreUsuario = async (user) => {
-  // Si ya tiene nombre, retornarlo
-  if (user && (user.nombre || user.name)) return user.nombre || user.name;
-  // Buscar por email o documento
-  let query = '';
-  if (user && user.email) query = `?email=${encodeURIComponent(user.email)}`;
-  else if (user && user.documentNumber) query = `?documentNumber=${encodeURIComponent(user.documentNumber)}`;
-  if (!query) return 'Patitas';
-  try {
-    const res = await fetch(`http://localhost:5000/api/usuario${query}`);
-    const data = await res.json();
-    if (data && data.nombre) return data.nombre;
-    if (data && data.name) return data.name;
-    return 'Patitas';
-  } catch {
-    return 'Patitas';
-  }
-};
-
-const Bienvenida = () => {
-  const [nombre, setNombre] = useState('Patitas');
+const BienvenidaFundacion = () => {
+  const [fundacion, setFundacion] = useState(null);
+  const [animales, setAnimales] = useState([]);
   const [showBubble, setShowBubble] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = getUserFromLocalStorage();
-    fetchNombreUsuario(user).then(setNombre);
+    const fund = getFundacionFromLocalStorage();
+    setFundacion(fund);
+    // Aquí podrías hacer fetch a los animales de la fundación si tienes endpoint
+    // Por ahora, ejemplo vacío:
+    // fetch(`/api/animales?fundacion_nit=${fund?.nit}`)
+    //   .then(res => res.json())
+    //   .then(data => setAnimales(data));
   }, []);
 
-  // Ocultar la burbuja automáticamente después de 2.5 segundos
   useEffect(() => {
     if (showBubble) {
       const timer = setTimeout(() => setShowBubble(false), 2500);
@@ -121,10 +107,16 @@ const Bienvenida = () => {
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Fundaciones</a>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quieres Ayudar?</a>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <Link className="nav-link-animada" to="/micuenta" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
-                Mi cuenta
+            {/* Enlace a Mi fundación solo para fundaciones */}
+            {localStorage.getItem('fundacion') && (
+              <Link className="nav-link-animada" to="/mifundacion" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
+                Mi fundación
               </Link>
+            )}
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
+                Mi fundación
+              </a>
               <div className="logout-dropdown" style={{
                 display: 'none',
                 position: 'absolute',
@@ -154,70 +146,6 @@ const Bienvenida = () => {
                 onMouseOut={e => e.currentTarget.style.background = 'none'}
                 >Cerrar sesión</button>
               </div>
-            </div>
-            {/* Barra de búsqueda estética */}
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              {/* Orejas de gato */}
-              <div style={{
-                position: 'absolute',
-                left: 18,
-                top: -18,
-                width: 18,
-                height: 18,
-                background: '#4B3A2D',
-                borderRadius: '60% 60% 0 0',
-                border: '2px solid #4B3A2D',
-                transform: 'rotate(-18deg)',
-                zIndex: 2,
-              }} />
-              <div style={{
-                position: 'absolute',
-                right: 18,
-                top: -18,
-                width: 18,
-                height: 18,
-                background: '#4B3A2D',
-                borderRadius: '60% 60% 0 0',
-                border: '2px solid #4B3A2D',
-                transform: 'rotate(18deg)',
-                zIndex: 2,
-              }} />
-              <form style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: '#fff',
-                borderRadius: 30,
-                padding: '2px 22px',
-                boxShadow: '0 4px 18px 0 #A7C7E733',
-                border: 'none',
-                minWidth: 220,
-                maxWidth: 340,
-                height: 36,
-                transition: 'box-shadow 0.2s',
-                position: 'relative',
-                zIndex: 1,
-              }} onSubmit={e => e.preventDefault()}>
-                <input
-                  type="text"
-                  placeholder="Buscar"
-                  style={{
-                    border: 'none',
-                    outline: 'none',
-                    background: 'transparent',
-                    fontSize: '1.13rem',
-                    color: '#4B3A2D',
-                    width: 120,
-                    fontFamily: 'inherit',
-                    padding: '2px 0',
-                    letterSpacing: '0.5px',
-                    fontWeight: 500,
-                  }}
-                />
-                <style>{`input::placeholder { color: #7BA7D9; opacity: 1; font-size: 1.13rem; font-weight: 500; }`}</style>
-                <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#A7C7E7', fontSize: 22, marginLeft: 8, display: 'flex', alignItems: 'center', padding: 0 }}>
-                  <i className="fa-solid fa-magnifying-glass"></i>
-                </button>
-              </form>
             </div>
           </nav>
         </div>
@@ -275,21 +203,25 @@ const Bienvenida = () => {
         {/* Contenido principal */}
         <div style={{ maxWidth: 600, marginLeft: 300 }}>
           <h1 style={{ fontSize: '3.2rem', fontWeight: 'bold', margin: 0, lineHeight: 1.1, color: COLORS.acento }}>
-            Hola <span style={{ color: COLORS.acento }}>{nombre}</span>
+            ¡Bienvenida, {fundacion?.nombre || 'Fundación'}!
           </h1>
           <h3 style={{ fontSize: '1.7rem', fontWeight: 600, margin: '18px 0 10px 0', color: COLORS.texto, display: 'flex', alignItems: 'center', gap: 10 }}>
-            Comienza a escribir esta historia con una huellita
+            Este es tu panel principal de gestión
             <span style={{ fontSize: '2.2rem', color: COLORS.acento, marginLeft: 2 }}>
               <i className="fa-solid fa-paw"></i>
             </span>
           </h3>
-          <p style={{ color: COLORS.textoSec, fontSize: '1.25rem', marginBottom: 28, whiteSpace: 'pre-line', lineHeight: 1.6 }}>
-            {`Bienvenido a Cuentos con Patitas,
-un lugar donde cada adopción es el comienzo de una historia única.
-Aquí, cada perrito y gatito encuentra no solo un hogar, sino un corazón que los acompaña en su nuevo capítulo de vida.
-Este es tu espacio para contar, compartir y ser parte de relatos llenos de amor, esperanza y segundas oportunidades.
-Explora, conecta y ayúdanos a escribir finales felices... una patita a la vez.`}
-          </p>
+          <div style={{ color: COLORS.textoSec, fontSize: '1.18rem', marginBottom: 18, whiteSpace: 'pre-line', lineHeight: 1.6 }}>
+            <p><b>NIT:</b> {fundacion?.nit}</p>
+            <p><b>Dirección:</b> {fundacion?.direccion}</p>
+            <p><b>Teléfono:</b> {fundacion?.telefono}</p>
+            <p><b>Email:</b> {fundacion?.email}</p>
+            <p><b>Persona a cargo:</b> {fundacion?.persona_acargo}</p>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ color: COLORS.acento, fontWeight: 700, fontSize: '1.25rem', marginBottom: 8 }}>Animales registrados</h4>
+            <ListaAnimales animales={animales} />
+          </div>
           <div style={{ display: 'flex', gap: 18, marginBottom: 24 }}>
             {socialLinks.map((s, i) => (
               <a key={i} href={s.href} style={{ color: COLORS.acento, fontSize: 28, transition: 'color 0.2s' }} target="_blank" rel="noopener noreferrer">
@@ -310,7 +242,7 @@ Explora, conecta y ayúdanos a escribir finales felices... una patita a la vez.`
             letterSpacing: '1px',
             transition: 'all 0.2s',
             boxShadow: `0 2px 8px ${COLORS.secundario}55`,
-          }}>Contáctame</a>
+          }}>Contactar soporte</a>
         </div>
       </section>
       {/* Imagen de corgiculón en la esquina inferior derecha */}
@@ -332,7 +264,7 @@ Explora, conecta y ayúdanos a escribir finales felices... una patita a la vez.`
             pointerEvents: 'none',
             animation: 'bubbleIn 0.25s',
           }}>
-            Ey, donde estas tocando
+            ¡Hola fundación!
             <span style={{
               position: 'absolute',
               left: '88%',
@@ -433,4 +365,4 @@ Explora, conecta y ayúdanos a escribir finales felices... una patita a la vez.`
   );
 };
 
-export default Bienvenida; 
+export default BienvenidaFundacion; 
