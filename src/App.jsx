@@ -6,12 +6,13 @@ import Home from './components/Home';
 import Bienvenida from './components/Bienvenida';
 import BienvenidaFundacion from './components/BienvenidaFundacion';
 import MiCuenta from './components/MiCuenta';
-import FormularioFundacion from './components/FormularioFundacion';
 import MiFundacion from './components/MiFundacion';
 import './App.css'; // Asegúrate de importar los estilos globales
 import backgroundImage from './assets/img/fondoperrogato.jpg';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import Loading from './components/Loading';
+import ListaFundaciones from './components/ListaFundaciones';
+import DetalleFundacion from './components/DetalleFundacion';
 
 function getAuthInfo() {
   const user = localStorage.getItem('user');
@@ -135,6 +136,13 @@ function BackgroundWithRoutes() {
               : <Navigate to="/" replace />
           }
         />
+        {/* Rutas para usuarios: ver lista y detalle de fundaciones */}
+        {(!isAuthenticated || rol === 'usuario') && (
+          <>
+            <Route path="/fundaciones" element={<ListaFundaciones />} />
+            <Route path="/fundacion/:nit" element={<DetalleFundacion />} />
+          </>
+        )}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

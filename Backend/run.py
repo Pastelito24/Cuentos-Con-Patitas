@@ -7,8 +7,10 @@ from datetime import datetime
 import re
 import traceback
 from werkzeug.security import check_password_hash
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, login_user, current_user
 from app.entidades.fundacion_user import FundacionUser
+from werkzeug.utils import secure_filename
+import os
 
 app = create_app()
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
@@ -27,6 +29,13 @@ from app.entidades.usuario import Usuario
 # flask-login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'fundaciones')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -181,6 +190,55 @@ def register():
         print('ERROR EN REGISTRO FUNDACION:', e)
         traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/fundaciones', methods=['GET'])
+def listar_fundaciones():
+    cursor = db.connection.cursor()
+    cursor.execute("SELECT nit, nombre, direccion, telefono, email, persona_acargo, foto_url FROM Fundaciones")
+    fundaciones = cursor.fetchall()
+    keys = [desc[0] for desc in cursor.description]
+    return jsonify([dict(zip(keys, row)) for row in fundaciones])
+
+@app.route('/api/fundacion/<nit>/animales', methods=['GET'])
+def animales_de_fundacion(nit):
+    cursor = db.connection.cursor()
+    cursor.execute("SELECT * FROM animales WHERE fundacion_id = %s", (nit,))
+    animales = cursor.fetchall()
+    keys = [desc[0] for desc in cursor.description]
+    return jsonify([dict(zip(keys, row)) for row in animales])
+
+@app.route('/api/editar_foto_fundacion', methods=['POST'])
+def editar_foto_fundacion():
+    print('===> Entrando a /api/editar_foto_fundacion')
+    print('current_user:', getattr(current_user, 'nit', None))
+    print('request.files:', request.files)
+    if not hasattr(current_user, 'nit'):
+        print('No autorizado')
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    if 'foto' not in request.files:
+        print('Archivo no enviado')
+        return jsonify({'success': False, 'error': 'Archivo no enviado'}), 400
+    file = request.files['foto']
+    print('file.filename:', file.filename)
+    if file.filename == '':
+        print('Nombre de archivo vacío')
+        return jsonify({'success': False, 'error': 'Nombre de archivo vacío'}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(f"{current_user.nit}_fundacion.{file.filename.rsplit('.', 1)[1].lower()}")
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        print('Guardando archivo en:', filepath)
+        file.save(filepath)
+        foto_url = f"/static/fundaciones/{filename}"
+        cursor = db.connection.cursor()
+        cursor.execute("UPDATE Fundaciones SET foto_url = %s WHERE nit = %s", (foto_url, current_user.nit))
+        db.connection.commit()
+        print('Foto guardada y base de datos actualizada:', foto_url)
+        return jsonify({'success': True, 'foto_url': foto_url})
+    else:
+        print('Tipo de archivo no permitido')
+        return jsonify({'success': False, 'error': 'Tipo de archivo no permitido'}), 400
+
+print("STATIC FOLDER ABSOLUTE PATH:", app.static_folder)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
