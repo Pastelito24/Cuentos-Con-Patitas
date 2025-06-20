@@ -1,0 +1,205 @@
+.page-container {
+  min-height: 100vh;
+  background: #FFF8F0;
+  font-family: 'Edu NSW ACT Foundation', cursive;
+}
+
+.lista-fundaciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.fundacion-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  cursor: pointer;
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fundacion-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.fundacion-imagen-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background-color: #fff3e4;
+}
+
+.fundacion-imagen {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.fundacion-card:hover .fundacion-imagen {
+  transform: scale(1.05);
+}
+
+.fundacion-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #E28F54, #FFB17A);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.fundacion-placeholder i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.placeholder-text {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.fundacion-info {
+  padding: 1.5rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fundacion-nombre {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.2rem;
+  color: #4c2e05;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.fundacion-detalles {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: auto;
+}
+
+.detalle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #7C6C5F;
+  font-size: 0.95rem;
+}
+
+.detalle i {
+  color: #E28F54;
+  width: 20px;
+}
+
+.fundacion-descripcion {
+  margin-top: 1rem;
+  color: #7C6C5F;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.btn-vermas {
+  display: inline-flex;
+  align-items: center;
+  background: #f9a826;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-weight: bold;
+  margin-top: 1rem;
+  align-self: flex-start;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-vermas:hover {
+  background: #e3911a;
+  transform: translateY(-2px);
+}
+
+.btn-vermas i {
+  margin-left: 6px;
+  transition: transform 0.3s ease;
+}
+
+.btn-vermas:hover i {
+  transform: translateX(3px);
+}
+
+/* Estados */
+.loading-state,
+.error-state,
+.no-fundaciones {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  color: #7C6C5F;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.loading-state i,
+.error-state i,
+.no-fundaciones i {
+  font-size: 3rem;
+  color: #E28F54;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.loading-state .fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lista-fundaciones {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .fundacion-imagen-container {
+    height: 180px;
+  }
+
+  .fundacion-info {
+    padding: 1rem;
+  }
+
+  .fundacion-nombre {
+    font-size: 1.1rem;
+  }
+} 

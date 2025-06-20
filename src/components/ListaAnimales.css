@@ -1,0 +1,166 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lista-animales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.card-animalito {
+  background: #fdfdfd;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #f0e9e9;
+  /* Animación de entrada */
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.card-animalito:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+.animal-card-header {
+  position: relative;
+  height: 220px;
+}
+
+.animal-card-imagen {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.disponibilidad-chip {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.3s ease;
+}
+
+.disponibilidad-chip.disponible {
+  background-color: rgba(46, 125, 50, 0.8);
+}
+.disponibilidad-chip.disponible::before {
+  content: '✔';
+  font-size: 1rem;
+}
+
+.disponibilidad-chip.adoptado {
+  background-color: rgba(211, 47, 47, 0.8);
+}
+.disponibilidad-chip.adoptado::before {
+  content: '✖';
+  font-size: 1rem;
+}
+
+.animal-card-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.animal-card-info-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.animal-card-info-main h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #4B3A2D;
+}
+
+.animal-card-info-main .animal-raza {
+  margin: 0;
+  color: #7C6C5F;
+  font-style: italic;
+}
+
+.animal-card-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  font-size: 0.95rem;
+  color: #7C6C5F;
+  margin-bottom: 1rem;
+}
+
+.animal-card-descripcion {
+  font-size: 0.95rem;
+  color: #7C6C5F;
+  border-top: 1px solid #f0e9e9;
+  padding-top: 1rem;
+  margin-top: auto;
+}
+
+.animal-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.action-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-btn.edit {
+  background-color: #E28F54;
+  color: white;
+}
+.action-btn.edit:hover {
+  background-color: #d17a3a;
+}
+
+.action-btn.delete {
+  background-color: #e0e0e0;
+  color: #333;
+}
+.action-btn.delete:hover {
+  background-color: #d1d1d1;
+}
+
+.no-animales {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  background: #fdfdfd;
+  border-radius: 1.5rem;
+  color: #7C6C5F;
+} 

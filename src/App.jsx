@@ -140,7 +140,7 @@ function BackgroundWithRoutes() {
         {(!isAuthenticated || rol === 'usuario') && (
           <>
             <Route path="/fundaciones" element={<ListaFundaciones />} />
-            <Route path="/fundacion/:nit" element={<DetalleFundacion />} />
+            <Route path="/fundacion/:fundacion_id" element={<DetalleFundacion />} />
           </>
         )}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,104 +1,82 @@
-from flask import Blueprint, request, jsonify
-from flask_login import login_required, current_user
-from app.configuracion import configu
-import MySQLdb
-
-fundacion_bp = Blueprint('fundacion_bp', __name__)
-
-# Nueva función para obtener la conexión
-
-def get_db_connection():
-    conf = configu['desarrolloConfig']
-    return MySQLdb.connect(
-        host=conf.MYSQL_HOST,
-        user=conf.MYSQL_USER,
-        passwd=conf.MYSQL_PASSWORD,
-        db=conf.MYSQL_DB,
-        port=conf.MYSQL_PORT
-    )
-
-@fundacion_bp.route('/api/mi_fundacion', methods=['GET'])
-@login_required
-def mi_fundacion():
-    if current_user.rol != 'fundacion':
-        return jsonify({'error': 'Solo fundaciones pueden acceder'}), 403
-    nit = current_user.nit
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM fundaciones WHERE nit = %s", (nit,))
-    fundacion = cursor.fetchone()
-    if not fundacion:
-        conn.close()
-        return jsonify({})
-    keys = [desc[0] for desc in cursor.description]
-    conn.close()
-    return jsonify(dict(zip(keys, fundacion)))
-
-@fundacion_bp.route('/api/crear_fundacion', methods=['POST'])
-@login_required
-def crear_fundacion():
-    if current_user.rol != 'fundacion':
-        return jsonify({'error': 'Solo fundaciones pueden crear fundación'}), 403
-    if current_user.fundacion_id:
-        return jsonify({'error': 'Ya tienes una fundación registrada'}), 400
+@app.route('/api/editar_descripcion_fundacion', methods=['POST'])
+def editar_descripcion_fundacion():
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    
     data = request.get_json()
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = """
-        INSERT INTO fundaciones (nit, nombre, direccion, telefono, email, persona_acargo, contrasena, foto_url)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    cursor.execute(sql, (
-        data['nit'],
-        data['nombre'],
-        data['direccion'],
-        data['telefono'],
-        data['email'],
-        data['persona_acargo'],
-        data['contrasena'],
-        data.get('foto_url', None)
-    ))
-    conn.commit()
-    fundacion_id = cursor.lastrowid
-    cursor.execute("UPDATE usuarios SET fundacion_id = %s WHERE usuario_id = %s", (fundacion_id, current_user.usuario_id))
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True, 'fundacion_id': fundacion_id})
+    if 'descripcion' not in data:
+        return jsonify({'success': False, 'error': 'Falta la descripción'}), 400
+    
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute(
+            "UPDATE Fundaciones SET descripcion = %s WHERE nit = %s",
+            (data['descripcion'], current_user.nit)
+        )
+        db.connection.commit()
+        return jsonify({'success': True, 'message': 'Descripción actualizada correctamente'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': 'Error al actualizar la descripción'}), 500
 
-@fundacion_bp.route('/api/agregar_animal', methods=['POST'])
-@login_required
+@app.route('/api/agregar_animal', methods=['POST'])
 def agregar_animal():
-    if current_user.rol != 'fundacion' or not current_user.fundacion_id:
-        return jsonify({'error': 'No autorizado'}), 403
-    data = request.get_json()
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = """
-        INSERT INTO animales (fundacion_id, nombre, especie, edad, descripcion, imagen_url)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """
-    cursor.execute(sql, (
-        current_user.fundacion_id,
-        data['nombre'],
-        data['especie'],
-        data['edad'],
-        data['descripcion'],
-        data['imagen_url']
-    ))
-    conn.commit()
-    animal_id = cursor.lastrowid
-    conn.close()
-    return jsonify({'success': True, 'animal_id': animal_id})
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    
+    try:
+        data = request.get_json()
+        cursor = db.connection.cursor()
 
-@fundacion_bp.route('/api/animales_de_fundacion', methods=['GET'])
-@login_required
-def animales_de_fundacion():
-    if current_user.rol != 'fundacion' or not current_user.fundacion_id:
-        return jsonify({'error': 'No autorizado'}), 403
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM animales WHERE fundacion_id = %s", (current_user.fundacion_id,))
-    animales = cursor.fetchall()
-    keys = [desc[0] for desc in cursor.description]
-    conn.close()
-    return jsonify([dict(zip(keys, row)) for row in animales]) 
+        cursor.execute("SELECT fundacion_id FROM Fundaciones WHERE nit = %s", (current_user.nit,))
+        fundacion = cursor.fetchone()
+        if not fundacion:
+            return jsonify({'success': False, 'error': 'Fundación no encontrada'}), 404
+        fundacion_id = fundacion[0]
+
+        # Validar campos
+        required_fields = ['nombre', 'tipo_animal', 'genero', 'edad', 'peso']
+        if not all(field in data and str(data[field]).strip() for field in required_fields):
+            return jsonify({'success': False, 'error': 'Faltan campos requeridos'}), 400
+        
+        sql = """
+            INSERT INTO animales (
+                fundacion_id, nombre, tipo_animal, edad, peso, 
+                condicion, descripcion, fotoanimal_url, fecha_ingreso, 
+                disponibilidad, genero, raza
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_DATE, %s, %s, %s)
+        """
+        cursor.execute(sql, (
+            fundacion_id,
+            data['nombre'],
+            data['tipo_animal'].lower(),
+            int(data['edad']),
+            float(data['peso']),
+            data.get('condicion', ''),
+            data.get('descripcion', ''),
+            data.get('fotoanimal_url'), 
+            data.get('disponibilidad', True),
+            data['genero'].lower(),
+            data.get('raza', '')
+        ))
+        db.connection.commit()
+        animal_id = cursor.lastrowid
+
+        # Devolver el animal recién creado
+        cursor.execute("""
+            SELECT 
+                animal_id, fundacion_id, nombre, tipo_animal, genero, raza, edad, peso,
+                condicion, descripcion, CAST(disponibilidad AS UNSIGNED) AS disponibilidad,
+                fecha_ingreso, fotoanimal_url
+            FROM animales WHERE animal_id = %s
+        """, (animal_id,))
+        
+        nuevo_animal = cursor.fetchone()
+        if nuevo_animal:
+            columns = [desc[0] for desc in cursor.description]
+            animal_dict = convert_to_dict(nuevo_animal, columns)
+            return jsonify({'success': True, 'animal': animal_dict, 'message': 'Animalito agregado con éxito'})
+        else:
+            return jsonify({'success': False, 'error': 'No se pudo recuperar el animal agregado'}), 500
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

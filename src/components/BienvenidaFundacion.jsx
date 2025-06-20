@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import logoSinTexto from '../assets/img/logosintexto.png';
-import corgiAbrazo from '../assets/img/corgiabrazo.png';
+import pastorConGato from '../assets/img/pastor_con_gato.png';
 import corgiCulon from '../assets/img/corgiculon.png';
-import ListaAnimales from './ListaAnimales';
 
 const COLORS = {
   fondo: '#FFF8F0',
@@ -38,7 +37,6 @@ const getFundacionFromLocalStorage = () => {
 
 const BienvenidaFundacion = () => {
   const [fundacion, setFundacion] = useState(null);
-  const [animales, setAnimales] = useState([]);
   const [showBubble, setShowBubble] = useState(false);
   const navigate = useNavigate();
 
@@ -103,20 +101,12 @@ const BienvenidaFundacion = () => {
             </div>
           </div>
           <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quienes Somos?</a>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Fundaciones</a>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quieres Ayudar?</a>
+            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</a>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
-            {/* Enlace a Mi fundación solo para fundaciones */}
-            {localStorage.getItem('fundacion') && (
+            <div className="fundacion-dropdown-container" style={{ position: 'relative', display: 'inline-block' }}>
               <Link className="nav-link-animada" to="/mifundacion" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
                 Mi fundación
               </Link>
-            )}
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
-                Mi fundación
-              </a>
               <div className="logout-dropdown" style={{
                 display: 'none',
                 position: 'absolute',
@@ -198,7 +188,7 @@ const BienvenidaFundacion = () => {
             zIndex: 2,
             filter: 'blur(22px)'
           }} />
-          <img src={corgiAbrazo} alt="Corgi abrazo" style={{ width: 370, height: 370, objectFit: 'contain', borderRadius: '50%', position: 'relative', zIndex: 3 }} />
+          <img src={pastorConGato} alt="Perro y gato" style={{ width: 370, height: 370, objectFit: 'contain', borderRadius: '50%', position: 'relative', zIndex: 3 }} />
         </div>
         {/* Contenido principal */}
         <div style={{ maxWidth: 600, marginLeft: 300 }}>
@@ -217,10 +207,6 @@ const BienvenidaFundacion = () => {
             <p><b>Teléfono:</b> {fundacion?.telefono}</p>
             <p><b>Email:</b> {fundacion?.email}</p>
             <p><b>Persona a cargo:</b> {fundacion?.persona_acargo}</p>
-          </div>
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ color: COLORS.acento, fontWeight: 700, fontSize: '1.25rem', marginBottom: 8 }}>Animales registrados</h4>
-            <ListaAnimales animales={animales} />
           </div>
           <div style={{ display: 'flex', gap: 18, marginBottom: 24 }}>
             {socialLinks.map((s, i) => (
@@ -320,7 +306,7 @@ const BienvenidaFundacion = () => {
         .logout-dropdown {
           display: none;
         }
-        .nav-link-animada:hover + .logout-dropdown,
+        .fundacion-dropdown-container:hover .logout-dropdown,
         .logout-dropdown:hover {
           display: block !important;
         }

@@ -1,5 +1,4 @@
 from flask import Flask
-from .routes import register_routes
 import os
 
 def create_app():
@@ -7,5 +6,5 @@ def create_app():
         __name__,
         static_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')
     )
-    register_routes(app)
+    # register_routes(app) # Eliminamos la importación conflictiva
     return app

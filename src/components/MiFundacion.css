@@ -1,0 +1,196 @@
+/* === Estructura y Fondo === */
+.fundacion-dashboard {
+  background-color: #FFF8F0;
+  min-height: 100vh;
+  font-family: 'Edu NSW ACT Hand Pre', cursive;
+  /* Fondo con patrón sutil de huellas */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='%23F4E2D8' fill-opacity='0.4'%3E%3Cpath d='M20 20c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'/%3E%3Cpath d='M20 20c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm-4.982-3.018c-.828 0-1.5.672-1.5 1.5s.672 1.5 1.5 1.5 1.5-.672 1.5-1.5-.672-1.5-1.5-1.5z'/%3E%3Cpath d='M24.982 18.482c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5z'/%3E%3Cpath d='M20 20c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z'/%3E%3Cpath d='M20 28c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.fundacion-main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* === Tarjeta Principal de la Fundación === */
+.card-fundacion {
+  background: #ffffff;
+  border-radius: 2rem;
+  padding: 2.5rem 3rem;
+  box-shadow: 0 12px 35px rgba(124, 108, 95, 0.15);
+  margin-bottom: 3rem;
+  border: 1px solid rgba(244, 226, 216, 0.7);
+}
+
+.fundacion-info-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2.5rem;
+  align-items: flex-start;
+}
+
+.fundacion-details-text h2 {
+  font-size: 2.5rem;
+  color: #E28F54;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.details-grid p {
+  margin: 0;
+  color: #7C6C5F;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.details-grid p i {
+  color: #E28F54;
+  width: 20px;
+  text-align: center;
+}
+
+/* === Sección de Descripción === */
+.fundacion-descripcion .descripcion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  border-top: 1px solid #F4E2D8;
+  padding-top: 1.5rem;
+}
+
+.fundacion-descripcion h4 {
+  font-size: 1.25rem;
+  color: #4B3A2D;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editar-btn-link {
+  background: none;
+  border: none;
+  color: #E28F54;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.editar-btn-link, .editar-foto-btn, .agregar-btn {
+  font-family: inherit;
+}
+
+.descripcion-texto {
+  color: #7C6C5F;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.descripcion-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-family: inherit;
+}
+
+.descripcion-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* === Sección de Foto === */
+.fundacion-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.photo-container {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(226, 143, 84, 0.3);
+  border: 5px solid white;
+  margin-bottom: 1rem;
+}
+
+.foto-fundacion {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.editar-foto-btn {
+  background-color: #E28F54;
+  color: white;
+  border-radius: 20px;
+  padding: 0.6rem 1.2rem;
+}
+
+/* === Sección de Animales === */
+.animales-section {
+  background: white;
+  border-radius: 2rem;
+  padding: 2rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.animales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.animales-header h3 {
+  font-size: 2rem;
+  color: #4B3A2D;
+  margin: 0;
+}
+
+.agregar-btn {
+  background: linear-gradient(45deg, #A8D5BA, #82C0A4);
+  color: white;
+  border-radius: 25px;
+  padding: 0.7rem 1.5rem;
+  font-weight: bold;
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(168, 213, 186, 0.5);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+.agregar-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 25px rgba(130, 192, 164, 0.8);
+  filter: brightness(1.1);
+}
+
+.editar-foto-btn, .descripcion-form .btn-guardar {
+  transition: all 0.3s ease;
+}
+
+.editar-foto-btn:hover, .descripcion-form .btn-guardar:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+} 
