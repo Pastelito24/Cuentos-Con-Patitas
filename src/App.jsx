@@ -7,12 +7,38 @@ import Bienvenida from './components/Bienvenida';
 import BienvenidaFundacion from './components/BienvenidaFundacion';
 import MiCuenta from './components/MiCuenta';
 import MiFundacion from './components/MiFundacion';
+import Eventos from './components/Eventos';
 import './App.css'; // Asegúrate de importar los estilos globales
 import backgroundImage from './assets/img/fondoperrogato.jpg';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import Loading from './components/Loading';
 import ListaFundaciones from './components/ListaFundaciones';
 import DetalleFundacion from './components/DetalleFundacion';
+import Donaciones from './components/Donaciones';
+
+// --- Componentes de Rutas Protegidas ---
+
+// Componente para proteger rutas que requieren solo autenticación
+const AuthRoute = ({ isAuthenticated, element }) => {
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  return element;
+};
+
+// Componente para proteger rutas que requieren un rol específico
+const RoleRoute = ({ isAuthenticated, userRole, requiredRole, element }) => {
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (userRole !== requiredRole) return <Navigate to="/index1" replace />;
+  return element;
+};
+
+// Componente para rutas públicas o de usuarios
+const UserOrPublicRoute = ({ isAuthenticated, userRole, element }) => {
+  if (!isAuthenticated || userRole === 'usuario') {
+    return element;
+  }
+  // Si es una fundación, no debería ver esta página (ej: /fundaciones), redirigir
+  return <Navigate to="/index1" replace />;
+};
 
 function getAuthInfo() {
   const user = localStorage.getItem('user');
@@ -115,34 +141,63 @@ function BackgroundWithRoutes() {
         <Route
           path="/index1"
           element={
-            isAuthenticated
-              ? rol === 'usuario'
-                ? <Bienvenida />
-                : <BienvenidaFundacion />
-              : <Navigate to="/" replace />
+            <AuthRoute
+              isAuthenticated={isAuthenticated}
+              element={rol === 'usuario' ? <Bienvenida /> : <BienvenidaFundacion />}
+            />
           }
         />
         <Route
           path="/micuenta"
-          element={isAuthenticated ? <MiCuenta /> : <Navigate to="/" replace />}
+          element={<AuthRoute isAuthenticated={isAuthenticated} element={<MiCuenta />} />}
         />
         <Route
           path="/mifundacion"
           element={
-            isAuthenticated
-              ? rol === 'fundacion'
-                ? <MiFundacion />
-                : <Navigate to="/index1" replace />
-              : <Navigate to="/" replace />
+            <RoleRoute
+              isAuthenticated={isAuthenticated}
+              userRole={rol}
+              requiredRole="fundacion"
+              element={<MiFundacion />}
+            />
           }
         />
-        {/* Rutas para usuarios: ver lista y detalle de fundaciones */}
-        {(!isAuthenticated || rol === 'usuario') && (
-          <>
-            <Route path="/fundaciones" element={<ListaFundaciones />} />
-            <Route path="/fundacion/:fundacion_id" element={<DetalleFundacion />} />
-          </>
-        )}
+        <Route
+          path="/eventos"
+          element={
+            <RoleRoute
+              isAuthenticated={isAuthenticated}
+              userRole={rol}
+              requiredRole="fundacion"
+              element={<Eventos />}
+            />
+          }
+        />
+        <Route
+          path="/donaciones"
+          element={<AuthRoute isAuthenticated={isAuthenticated} element={<Donaciones />} />}
+        />
+        {/* Rutas para usuarios o no autenticados */}
+        <Route
+          path="/fundaciones"
+          element={
+            <UserOrPublicRoute
+              isAuthenticated={isAuthenticated}
+              userRole={rol}
+              element={<ListaFundaciones />}
+            />
+          }
+        />
+        <Route
+          path="/fundacion/:fundacion_id"
+          element={
+            <UserOrPublicRoute
+              isAuthenticated={isAuthenticated}
+              userRole={rol}
+              element={<DetalleFundacion />}
+            />
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

@@ -1,0 +1,121 @@
+.modal-overlay-fundacion {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    animation: fadeInOverlay 0.3s;
+}
+  
+@keyframes fadeInOverlay {
+    from { background: rgba(0, 0, 0, 0); backdrop-filter: blur(0px); }
+    to { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
+}
+  
+.edit-card-fundacion {
+    background: #FFFBF5;
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 600px;
+    border: 1px solid #F0E5D8;
+    animation: slideInModal 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+  
+@keyframes slideInModal {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.edit-card-fundacion h2 {
+    font-family: 'Special Elite', cursive;
+    color: #4B3A2D;
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 25px;
+    letter-spacing: 1px;
+}
+  
+.form-grid-fundacion {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 25px;
+    margin-bottom: 25px;
+}
+  
+.form-grid-fundacion label {
+    font-weight: bold;
+    color: #6D5B4F;
+    font-size: 1.05rem;
+    margin-bottom: 5px;
+    display: block;
+}
+  
+.form-grid-fundacion input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #E0D3C4;
+    border-radius: 10px;
+    background-color: #FFFFFF;
+    color: #4B3A2D;
+    font-family: 'Edu NSW ACT Hand Pre', cursive;
+    font-size: 1.1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+  
+.form-grid-fundacion input:focus {
+    outline: none;
+    border-color: #E28F54;
+    box-shadow: 0 0 0 3px rgba(226, 143, 84, 0.3);
+}
+
+.form-grid-fundacion .full-width {
+    grid-column: 1 / -1;
+}
+  
+.form-actions-fundacion {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 10px;
+}
+  
+.form-actions-fundacion button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Edu NSW ACT Hand Pre', cursive;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.form-actions-fundacion button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+  
+.btn-save {
+    background-color: #E28F54;
+    color: white;
+}
+  
+.btn-cancel {
+    background-color: #F0E5D8;
+    color: #6D5B4F;
+}
+
+.error-message {
+    color: #D9534F;
+    text-align: center;
+    margin: -10px 0 15px 0;
+    font-weight: bold;
+} 

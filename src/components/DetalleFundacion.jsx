@@ -86,6 +86,8 @@ const DetalleFundacion = () => {
   const [error, setError] = useState(null);
   const [selectedAnimal, setSelectedAnimal] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [fundacionImageError, setFundacionImageError] = useState(false);
+  const [animalImageErrors, setAnimalImageErrors] = useState({});
 
   useEffect(() => {
     const fetchFundacionDetails = async () => {
@@ -133,6 +135,79 @@ const DetalleFundacion = () => {
     setSelectedAnimal(null);
   }, []);
 
+  const handleFundacionImageError = useCallback(() => {
+    setFundacionImageError(true);
+  }, []);
+
+  const handleAnimalImageError = useCallback((animalId) => {
+    setAnimalImageErrors(prev => ({
+      ...prev,
+      [animalId]: true
+    }));
+  }, []);
+
+  const FundacionImagePlaceholder = () => (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      background: `linear-gradient(135deg, ${COLORS.secundario}, ${COLORS.fondo})`,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: COLORS.textoSec,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <i className="fas fa-home" style={{ 
+        fontSize: '3rem', 
+        color: COLORS.acento,
+        marginBottom: '0.5rem',
+        zIndex: 1,
+        position: 'relative'
+      }}></i>
+      <span style={{
+        fontSize: '0.9rem',
+        fontWeight: 500,
+        zIndex: 1,
+        position: 'relative',
+        textAlign: 'center',
+        lineHeight: '1.2'
+      }}>Foto no disponible</span>
+    </div>
+  );
+
+  const AnimalImagePlaceholder = ({ animal }) => (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      background: `linear-gradient(135deg, ${COLORS.secundario}, ${COLORS.fondo})`,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: COLORS.textoSec,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <i className="fas fa-paw" style={{ 
+        fontSize: '3rem', 
+        color: COLORS.acento,
+        marginBottom: '0.5rem',
+        zIndex: 1,
+        position: 'relative'
+      }}></i>
+      <span style={{
+        fontSize: '0.9rem',
+        fontWeight: 500,
+        zIndex: 1,
+        position: 'relative',
+        textAlign: 'center',
+        lineHeight: '1.2'
+      }}>Foto no disponible</span>
+    </div>
+  );
+
   // Componente Modal optimizado
   const AnimalModal = useMemo(() => {
     if (!selectedAnimal || !showModal) return null;
@@ -173,15 +248,16 @@ const DetalleFundacion = () => {
             overflow: 'hidden',
             borderRadius: '20px 20px 0 0'
           }}>
-            <img
-              src={selectedAnimal.fotoanimal_url || '/placeholder-pet.png'}
-              alt={selectedAnimal.nombre}
-              style={styles.animalImage}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/placeholder-pet.png';
-              }}
-            />
+            {!animalImageErrors[selectedAnimal.animal_id] && selectedAnimal.fotoanimal_url ? (
+              <img
+                src={selectedAnimal.fotoanimal_url}
+                alt={selectedAnimal.nombre}
+                style={styles.animalImage}
+                onError={() => handleAnimalImageError(selectedAnimal.animal_id)}
+              />
+            ) : (
+              <AnimalImagePlaceholder animal={selectedAnimal} />
+            )}
             <div style={{
               position: 'absolute',
               bottom: 0,
@@ -210,12 +286,12 @@ const DetalleFundacion = () => {
               <div style={{ textAlign: 'center' }}>
                 <i className="fas fa-paw" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
                 <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Tipo</h4>
-                <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.tipo_animal.charAt(0).toUpperCase() + selectedAnimal.tipo_animal.slice(1)}</p>
+                <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.tipo_animal ? selectedAnimal.tipo_animal.charAt(0).toUpperCase() + selectedAnimal.tipo_animal.slice(1) : 'No especificado'}</p>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <i className="fas fa-venus-mars" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
                 <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Género</h4>
-                <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.genero.charAt(0).toUpperCase() + selectedAnimal.genero.slice(1)}</p>
+                <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.genero ? selectedAnimal.genero.charAt(0).toUpperCase() + selectedAnimal.genero.slice(1) : 'No especificado'}</p>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <i className="fas fa-birthday-cake" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
@@ -377,19 +453,20 @@ const DetalleFundacion = () => {
             border: `4px solid ${COLORS.acento}`,
             boxShadow: '0 4px 12px rgba(226,143,84,0.2)'
           }}>
-            <img
-              src={fundacion.foto_url || '/placeholder-fundacion.png'}
-              alt={fundacion.nombre}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/placeholder-fundacion.png';
-              }}
-            />
+            {!fundacionImageError && fundacion.foto_url ? (
+              <img
+                src={fundacion.foto_url}
+                alt={fundacion.nombre}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onError={handleFundacionImageError}
+              />
+            ) : (
+              <FundacionImagePlaceholder />
+            )}
           </div>
 
           {/* Información de la fundación */}
@@ -531,15 +608,16 @@ const DetalleFundacion = () => {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <img
-                    src={animal.fotoanimal_url || '/placeholder-pet.png'}
-                    alt={animal.nombre}
-                    style={styles.animalImage}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/placeholder-pet.png';
-                    }}
-                  />
+                  {!animalImageErrors[animal.animal_id] && animal.fotoanimal_url ? (
+                    <img
+                      src={animal.fotoanimal_url}
+                      alt={animal.nombre}
+                      style={styles.animalImage}
+                      onError={() => handleAnimalImageError(animal.animal_id)}
+                    />
+                  ) : (
+                    <AnimalImagePlaceholder animal={animal} />
+                  )}
                   <div style={styles.animalInfo}>
                     <h3 style={styles.animalName}>{animal.nombre}</h3>
                     <div style={styles.animalDetails}>

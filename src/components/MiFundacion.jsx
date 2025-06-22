@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import ListaAnimales from './ListaAnimales';
 import AnimalFormCard from './AnimalFormCard';
+import EditarFundacionCard from './EditarFundacionCard';
+import ConfirmacionModal from './ConfirmacionModal';
 import logoSinTexto from '../assets/img/logosintexto.png';
 import './MiFundacion.css';
+import { FaPlus, FaSignOutAlt, FaEdit, FaCamera, FaSave, FaTrash } from 'react-icons/fa';
 
 const COLORS = {
   fondo: '#FFF8F0',
@@ -23,10 +26,11 @@ const MiFundacion = () => {
   const [editandoFoto, setEditandoFoto] = useState(false);
   const [editandoDescripcion, setEditandoDescripcion] = useState(false);
   const [nuevaFoto, setNuevaFoto] = useState(null);
-  const [nuevaDescripcion, setNuevaDescripcion] = useState('');
+  const [descripcion, setDescripcion] = useState('');
   const [animales, setAnimales] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingAnimal, setEditingAnimal] = useState(null);
+  const [fundacionImageError, setFundacionImageError] = useState(false);
   const [animalForm, setAnimalForm] = useState({
     nombre: '',
     tipo_animal: 'Perro',
@@ -38,7 +42,14 @@ const MiFundacion = () => {
     genero: 'macho',
     raza: ''
   });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [refreshAnimales, setRefreshAnimales] = useState(false);
+  const [isEditingDesc, setIsEditingDesc] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const navigate = useNavigate();
+
+  const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -72,7 +83,7 @@ const MiFundacion = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [navigate]);
 
   const showSuccessMessage = (message) => {
     setSuccessMessage(message);
@@ -123,6 +134,7 @@ const MiFundacion = () => {
         if (resp.success) {
           setEditandoFoto(false);
           setNuevaFoto(null);
+          setFundacionImageError(false);
           showSuccessMessage('¡Foto de perfil actualizada con éxito!');
           setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -141,12 +153,12 @@ const MiFundacion = () => {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ descripcion: nuevaDescripcion })
+      body: JSON.stringify({ descripcion: descripcion })
     })
       .then(res => res.json())
       .then(resp => {
         if (resp.success) {
-          setFundacion(prev => ({ ...prev, descripcion: nuevaDescripcion }));
+          setFundacion(prev => ({ ...prev, descripcion: descripcion }));
           setEditandoDescripcion(false);
           showSuccessMessage('¡Descripción actualizada con éxito!');
         } else {
@@ -187,12 +199,8 @@ const MiFundacion = () => {
     try {
       const response = await fetch(url, {
         method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
         credentials: 'include',
-        body: JSON.stringify(animalData),
+        body: animalData,
       });
 
       const result = await response.json();
@@ -203,9 +211,8 @@ const MiFundacion = () => {
 
       if (result.success) {
         if (isEditing) {
-          const updatedAnimal = { ...editingAnimal, ...animalData };
           setAnimales(prev => prev.map(a => 
-            a.animal_id === updatedAnimal.animal_id ? updatedAnimal : a
+            a.animal_id === result.animal.animal_id ? result.animal : a
           ));
         } else {
           setAnimales(prev => [result.animal, ...prev]);
@@ -230,6 +237,46 @@ const MiFundacion = () => {
     localStorage.clear();
     navigate('/');
   };
+
+  const handleImageError = () => {
+    setFundacionImageError(true);
+  };
+
+  const handleUpdateFundacion = (updatedFundacion) => {
+    setFundacion(updatedFundacion);
+    setDescripcion(updatedFundacion.descripcion || '');
+    showSuccessMessage('¡Los datos de tu fundación se han actualizado!');
+  };
+
+  const handleDeleteRequest = () => {
+    setShowConfirmationModal(true);
+  };
+
+  const handleDeleteFundacion = async () => {
+    setShowConfirmationModal(false);
+    try {
+      const response = await fetch('http://localhost:5000/api/eliminar_fundacion', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('Tu fundación ha sido eliminada. ¡Gracias por haber sido parte de Cuentos Con Patitas!');
+        handleLogout();
+      } else {
+        setError(data.error || 'No se pudo eliminar la fundación.');
+      }
+    } catch (err) {
+      setError('Error de conexión al intentar eliminar la fundación.');
+    }
+  };
+
+  const FundacionImagePlaceholder = () => (
+    <div className="fundacion-image-placeholder">
+      <i className="fas fa-home"></i>
+      <span>Foto no disponible</span>
+    </div>
+  );
 
   if (loading) return <div style={{ background: COLORS.fondo, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Cargando...</div>;
   if (error) return <div style={{ background: COLORS.fondo, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>{error}</div>;
@@ -284,7 +331,6 @@ const MiFundacion = () => {
 
   return (
     <div className="fundacion-dashboard">
-      {successMessage && <div className="success-toast">{successMessage}</div>}
       <header style={{
         width: '100vw',
         background: '#A7D0F5',
@@ -293,6 +339,10 @@ const MiFundacion = () => {
         alignItems: 'center',
         padding: '0',
         margin: '0',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 1000
       }}>
         <div style={{
           width: '100%',
@@ -314,10 +364,10 @@ const MiFundacion = () => {
             </div>
           </div>
           <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</a>
+            <Link to="/eventos" className="nav-link-animada" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</Link>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
             <div className="fundacion-dropdown-container" style={{ position: 'relative', display: 'inline-block' }}>
-              <Link className="nav-link-animada" to="/mifundacion" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
+              <Link className="nav-link-animada" to="/mifundacion" style={{ color: '#E28F54', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
                 Mi fundación
               </Link>
               <div className="logout-dropdown" style={{
@@ -353,95 +403,130 @@ const MiFundacion = () => {
           </nav>
         </div>
       </header>
-      
-      <main className="fundacion-main-content">
-        <div className="card-fundacion">
-          <div className="fundacion-info-grid">
-            <div className="fundacion-details-text">
-              <h2>¡Bienvenido, {fundacion.nombre}!</h2>
-              
-              <div className="details-grid">
-                <p><strong><i className="fas fa-id-card"></i> NIT:</strong> {fundacion.nit}</p>
-                <p><strong><i className="fas fa-map-marker-alt"></i> Dirección:</strong> {fundacion.direccion}</p>
-                <p><strong><i className="fas fa-phone"></i> Teléfono:</strong> {fundacion.telefono}</p>
-                <p><strong><i className="fas fa-envelope"></i> Email:</strong> {fundacion.email}</p>
-                <p><strong><i className="fas fa-user"></i> A cargo:</strong> {fundacion.persona_acargo}</p>
+
+      <div style={{ paddingTop: '150px' }}>
+        {successMessage && (
+          <div className="success-toast">
+            <i className="fas fa-check-circle"></i> {successMessage}
+          </div>
+        )}
+        <main className="fundacion-main-content">
+          <div className="card-fundacion">
+            <div className="fundacion-info-grid">
+              <div className="fundacion-details-text">
+                <h2>¡Bienvenido, {fundacion.nombre}!</h2>
+                
+                <div className="details-grid">
+                  <p><strong><i className="fas fa-id-card"></i> NIT:</strong> {fundacion.nit}</p>
+                  <p><strong><i className="fas fa-map-marker-alt"></i> Dirección:</strong> {fundacion.direccion}</p>
+                  <p><strong><i className="fas fa-phone"></i> Teléfono:</strong> {fundacion.telefono}</p>
+                  <p><strong><i className="fas fa-envelope"></i> Email:</strong> {fundacion.email}</p>
+                  <p><strong><i className="fas fa-user"></i> A cargo:</strong> {fundacion.persona_acargo}</p>
+                </div>
+
+                <div className="fundacion-descripcion">
+                  <div className="descripcion-header">
+                    <h4><i className="fas fa-info-circle"></i> Sobre nosotros</h4>
+                    <button onClick={() => setEditandoDescripcion(true)} className="editar-btn-link">
+                      <i className="fas fa-pencil-alt"></i> Editar
+                    </button>
+                  </div>
+                  {editandoDescripcion ? (
+                    <form onSubmit={handleDescripcionSubmit} className="descripcion-form">
+                      <textarea
+                        defaultValue={fundacion.descripcion || ''}
+                        onChange={(e) => setDescripcion(e.target.value)}
+                        rows="4"
+                        required
+                      />
+                      <div className="form-actions">
+                        <button type="submit" className="btn-guardar">Guardar</button>
+                        <button type="button" onClick={() => setEditandoDescripcion(false)} className="btn-cancelar">Cancelar</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <p className="descripcion-texto">{fundacion.descripcion || 'No hay descripción disponible. ¡Añade una!'}</p>
+                  )}
+                </div>
               </div>
 
-              <div className="fundacion-descripcion">
-                <div className="descripcion-header">
-                  <h4><i className="fas fa-info-circle"></i> Sobre nosotros</h4>
-                  <button onClick={() => setEditandoDescripcion(true)} className="editar-btn-link">
-                    <i className="fas fa-pencil-alt"></i> Editar
-                  </button>
-                </div>
-                {editandoDescripcion ? (
-                  <form onSubmit={handleDescripcionSubmit} className="descripcion-form">
-                    <textarea
-                      defaultValue={fundacion.descripcion || ''}
-                      onChange={(e) => setNuevaDescripcion(e.target.value)}
-                      rows="4"
-                      required
+              <div className="fundacion-photo-section">
+                <div className="photo-container">
+                  {!fundacionImageError && fundacion.foto_url ? (
+                    <img 
+                      src={fundacion.foto_url} 
+                      alt="Foto fundación" 
+                      className="foto-fundacion"
+                      onError={handleImageError}
                     />
-                    <div className="form-actions">
-                      <button type="submit" className="btn-guardar">Guardar</button>
-                      <button type="button" onClick={() => setEditandoDescripcion(false)} className="btn-cancelar">Cancelar</button>
+                  ) : (
+                    <FundacionImagePlaceholder />
+                  )}
+                </div>
+                <button onClick={() => setEditandoFoto(true)} className="editar-foto-btn">
+                  <i className="fas fa-camera"></i> Cambiar Foto
+                </button>
+                <button onClick={() => setShowEditModal(true)} className="editar-datos-btn">
+                  <i className="fas fa-edit"></i> Editar Datos
+                </button>
+                <button onClick={handleDeleteRequest} className="eliminar-fundacion-btn">
+                  <i className="fas fa-trash"></i> Eliminar Fundación
+                </button>
+                {editandoFoto && (
+                  <form onSubmit={handleFotoSubmit} className="foto-form">
+                    <input type="file" accept="image/*" onChange={e => setNuevaFoto(e.target.files[0])} required ref={fileInputRef} />
+                    <div className="foto-buttons">
+                      <button type="submit">Guardar</button>
+                      <button type="button" onClick={() => { setEditandoFoto(false); setNuevaFoto(null); }}>Cancelar</button>
                     </div>
                   </form>
-                ) : (
-                  <p className="descripcion-texto">{fundacion.descripcion || 'No hay descripción disponible. ¡Añade una!'}</p>
                 )}
               </div>
             </div>
+          </div>
 
-            <div className="fundacion-photo-section">
-              <div className="photo-container">
-                <img 
-                  src={fundacion.foto_url || '/placeholder-fundacion.png'} 
-                  alt="Foto fundación" 
-                  className="foto-fundacion"
-                  onError={(e) => { e.target.src = '/placeholder-fundacion.png'; }}
-                />
-              </div>
-              <button onClick={() => setEditandoFoto(true)} className="editar-foto-btn">
-                <i className="fas fa-camera"></i> Cambiar Foto
+          <div className="animales-section">
+            <div className="animales-header">
+              <h3><i className="fas fa-paw"></i> Animalitos Registrados</h3>
+              <button onClick={() => handleOpenForm(null)} className="agregar-btn">
+                <i className="fas fa-plus"></i> Agregar Animalito
               </button>
-              {editandoFoto && (
-                <form onSubmit={handleFotoSubmit} className="foto-form">
-                  <input type="file" accept="image/*" onChange={e => setNuevaFoto(e.target.files[0])} required />
-                  <div className="foto-buttons">
-                    <button type="submit">Guardar</button>
-                    <button type="button" onClick={() => { setEditandoFoto(false); setNuevaFoto(null); }}>Cancelar</button>
-                  </div>
-                </form>
-              )}
             </div>
-          </div>
-        </div>
 
-        <div className="animales-section">
-          <div className="animales-header">
-            <h3><i className="fas fa-paw"></i> Animalitos Registrados</h3>
-            <button onClick={() => handleOpenForm(null)} className="agregar-btn">
-              <i className="fas fa-plus"></i> Agregar Animalito
-            </button>
+            <ListaAnimales 
+              animales={animales} 
+              onEdit={handleOpenForm}
+              onAnimalDeleted={handleAnimalDeleted}
+            />
           </div>
+        </main>
 
-          <ListaAnimales 
-            animales={animales} 
-            onEdit={handleOpenForm}
-            onAnimalDeleted={handleAnimalDeleted}
+        {showForm && (
+          <AnimalFormCard 
+            animal={editingAnimal || {}}
+            onClose={handleCloseForm}
+            onSubmit={handleSaveAnimal}
           />
-        </div>
-      </main>
+        )}
 
-      {showForm && (
-        <AnimalFormCard 
-          animal={editingAnimal || {}}
-          onClose={handleCloseForm}
-          onSubmit={handleSaveAnimal}
-        />
-      )}
+        {showEditModal && (
+          <EditarFundacionCard
+            fundacion={fundacion}
+            onClose={() => setShowEditModal(false)}
+            onUpdate={handleUpdateFundacion}
+          />
+        )}
+
+        {showConfirmationModal && (
+          <ConfirmacionModal
+            isOpen={showConfirmationModal}
+            onClose={() => setShowConfirmationModal(false)}
+            onConfirm={handleDeleteFundacion}
+            title="¿Estás seguro?"
+            message="Esta acción eliminará permanentemente tu fundación y todos los animales asociados. Esta acción no se puede deshacer."
+          />
+        )}
+      </div>
 
       <style>{`
         .nav-link-animada {

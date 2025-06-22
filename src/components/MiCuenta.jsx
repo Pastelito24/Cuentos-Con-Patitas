@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from './Card';
+import EditarUsuarioCard from './EditarUsuarioCard';
+import ConfirmacionModal from './ConfirmacionModal';
 import gatitoLloron from '../assets/img/Gatito_Lloron.png';
 import { FaUserEdit, FaCommentDots, FaHeart, FaComments } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
@@ -62,44 +64,127 @@ const HistorialIcon = () => (
   </div>
 );
 
-const cards = [
-  {
-    title: 'Editar Datos',
-    icon: <FaUserEdit size={56} color={iconColor} />,
-  },
-  {
-    title: 'Historial',
-    icon: <HistorialIcon />,
-  },
-  {
-    title: 'Eliminar Cuenta',
-    icon: <img src={gatitoLloron} alt="Gatito llorón" style={{ width: 70, height: 70, objectFit: 'contain' }} />,
-  },
-  {
-    title: 'Enviar comentarios',
-    icon: <FaCommentDots size={56} color={iconColor} />,
-  },
-  {
-    title: 'Ayuda',
-    icon: <FaHeart size={56} color={iconColor} />,
-  },
-  {
-    title: 'Tus Redes',
-    icon: <FaComments size={56} color={iconColor} />,
-  },
-];
-
 const MiCuenta = () => {
   const navigate = useNavigate();
+  const [usuario, setUsuario] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/mi_cuenta', { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          setUsuario(data.usuario);
+        } else {
+          setError(data.error || 'No se pudieron cargar los datos del usuario.');
+          if (response.status === 403) navigate('/');
+        }
+      } catch (err) {
+        setError('Error de conexión.');
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsuario();
+  }, [navigate]);
+
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
   };
+
+  const handleOpenEditModal = () => {
+    if (usuario) {
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdateUser = (updatedUser) => {
+    setUsuario(updatedUser);
+    showSuccessMessage('¡Tus datos se han actualizado con éxito!');
+  };
+
+  const handleDeleteRequest = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    setShowDeleteConfirm(false);
+    try {
+      const response = await fetch('http://localhost:5000/api/eliminar_mi_cuenta', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('Tu cuenta ha sido eliminada. Te echaremos de menos.');
+        handleLogout();
+      } else {
+        setError(data.error || 'No se pudo eliminar la cuenta.');
+      }
+    } catch (err) {
+      setError('Error de conexión al intentar eliminar la cuenta.');
+    }
+  };
+  
+  const cards = [
+    {
+      title: 'Editar Datos',
+      icon: <FaUserEdit size={56} color={iconColor} />,
+      action: handleOpenEditModal,
+    },
+    {
+      title: 'Historial',
+      icon: <HistorialIcon />,
+      action: () => alert('Funcionalidad de Historial en desarrollo.'),
+    },
+    {
+      title: 'Eliminar Cuenta',
+      icon: <img src={gatitoLloron} alt="Gatito llorón" style={{ width: 70, height: 70, objectFit: 'contain' }} />,
+      action: handleDeleteRequest,
+    },
+    {
+      title: 'Enviar comentarios',
+      icon: <FaCommentDots size={56} color={iconColor} />,
+    },
+    {
+      title: 'Ayuda',
+      icon: <FaHeart size={56} color={iconColor} />,
+    },
+    {
+      title: 'Tus Redes',
+      icon: <FaComments size={56} color={iconColor} />,
+    },
+  ];
+
+  const showSuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
+  };
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#FFF8F0', fontFamily: '"Edu NSW ACT Hand Pre", cursive', padding: 0 }}>
-      {/* Navbar reutilizado */}
-      {/* Puedes importar y usar <Navbar /> si ya tienes el componente, aquí lo dejo comentado: */}
-      {/* <Navbar /> */}
+      {successMessage && (
+        <div className="success-toast">
+          <i className="fas fa-check-circle"></i> {successMessage}
+        </div>
+      )}
       <header style={{
         width: '100vw',
         background: '#A7D0F5',
@@ -117,7 +202,6 @@ const MiCuenta = () => {
           alignItems: 'center',
           padding: '12px 4vw 0 4vw',
         }}>
-          {/* Logo y texto apilado */}
           <div
             style={{ display: 'flex', alignItems: 'center', gap: 24, marginLeft: -150, cursor: 'pointer' }}
             onClick={() => navigate('/index1')}
@@ -131,8 +215,8 @@ const MiCuenta = () => {
           </div>
           <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quienes Somos?</a>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Fundaciones</a>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quieres Ayudar?</a>
+            <Link to="/fundaciones" className="nav-link-animada" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Fundaciones</Link>
+            <Link to="/donaciones" className="nav-link-animada" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quieres Ayudar?</Link>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
@@ -174,9 +258,23 @@ const MiCuenta = () => {
       <h1 style={{ textAlign: 'center', fontSize: '3.2rem', margin: '32px 0 36px 0', fontWeight: 700, letterSpacing: 2, color: '#4B3A2D', fontFamily: '"Special Elite", "Edu NSW ACT Hand Pre", cursive' }}>Mi cuenta</h1>
       <div className="card-grid">
         {cards.map((card, idx) => (
-          <Card key={idx} title={card.title} icon={card.icon} />
+          <Card key={idx} title={card.title} icon={card.icon} onClick={card.action} />
         ))}
       </div>
+      {showEditModal && usuario && (
+        <EditarUsuarioCard 
+          usuario={usuario}
+          onClose={() => setShowEditModal(false)}
+          onUpdate={handleUpdateUser}
+        />
+      )}
+      <ConfirmacionModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteUser}
+        title="¿Estás seguro?"
+        message="Esta acción es permanente y no podrás recuperar tu cuenta. Todos tus datos serán eliminados."
+      />
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
       <style>{`
         .nav-link-animada {
@@ -236,6 +334,33 @@ const MiCuenta = () => {
         .logo-titulo-navbar:hover .titulo-navbar-inferior::after {
           opacity: 1;
           transform: scaleX(1);
+        }
+        .success-toast {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: linear-gradient(90deg, #86E3CE 0%, #A8D5BA 100%);
+          color: #4B3A2D;
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          z-index: 2000;
+          font-size: 1.1rem;
+          font-weight: bold;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          animation: slideInToast 0.4s forwards, fadeOutToast 0.4s 2.6s forwards;
+        }
+        
+        @keyframes slideInToast {
+          from { opacity: 0; transform: translateX(100%); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes fadeOutToast {
+          from { opacity: 1; transform: translateX(0); }
+          to { opacity: 0; transform: translateX(100%); }
         }
       `}</style>
     </div>

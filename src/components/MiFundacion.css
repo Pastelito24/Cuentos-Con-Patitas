@@ -139,11 +139,117 @@
   object-fit: cover;
 }
 
+.fundacion-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #F4E2D8 0%, #FFF8F0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #7C6C5F;
+  position: relative;
+  overflow: hidden;
+}
+
+.fundacion-image-placeholder::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(226, 143, 84, 0.1) 50%, transparent 70%);
+  animation: shimmer 2s infinite;
+}
+
+.fundacion-image-placeholder i {
+  font-size: 3rem;
+  color: #E28F54;
+  margin-bottom: 0.5rem;
+  z-index: 1;
+  position: relative;
+}
+
+.fundacion-image-placeholder span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 1;
+  position: relative;
+  text-align: center;
+  line-height: 1.2;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .editar-foto-btn {
   background-color: #E28F54;
   color: white;
   border-radius: 20px;
   padding: 0.6rem 1.2rem;
+}
+
+.editar-datos-btn {
+  background-color: #A7D0F5;
+  color: #4B3A2D;
+  border-radius: 20px;
+  padding: 0.6rem 1.2rem;
+  margin-top: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(167, 208, 245, 0.3);
+}
+
+.editar-datos-btn:hover {
+  background-color: #8BC0E8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(167, 208, 245, 0.4);
+}
+
+.editar-datos-btn i {
+  font-size: 1rem;
+}
+
+.eliminar-fundacion-btn {
+  background-color: #FFB3B3;
+  color: #8B0000;
+  border-radius: 20px;
+  padding: 0.6rem 1.2rem;
+  margin-top: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 179, 179, 0.3);
+}
+
+.eliminar-fundacion-btn:hover {
+  background-color: #FF9999;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 179, 179, 0.4);
+}
+
+.eliminar-fundacion-btn i {
+  font-size: 1rem;
 }
 
 /* === Sección de Animales === */

@@ -15,23 +15,27 @@ const AnimalFormCard = ({ onClose, onSubmit, animal = {} }) => {
     condicion: animal.condicion || '',
     descripcion: animal.descripcion || '',
     disponibilidad: isInitiallyAvailable, // Usar el valor verificado
-    fotoanimal_url: animal.fotoanimal_url || '',
+    foto: null,
   });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'file') {
+      setFormData(prev => ({ ...prev, [name]: files[0] }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Convertir a los tipos de dato correctos antes de enviar
-    const dataToSend = {
-      ...formData,
-      edad: parseInt(formData.edad, 10) || 0,
-      peso: parseFloat(formData.peso) || 0,
-      disponibilidad: formData.disponibilidad,
-    };
+    
+    const dataToSend = new FormData();
+    for (const key in formData) {
+      if (formData[key] !== null) {
+        dataToSend.append(key, formData[key]);
+      }
+    }
     onSubmit(dataToSend);
   };
 
@@ -61,13 +65,15 @@ const AnimalFormCard = ({ onClose, onSubmit, animal = {} }) => {
           <textarea name="condicion" placeholder="Condición médica y de salud" value={formData.condicion} onChange={handleChange} required/>
           <textarea name="descripcion" placeholder="Describe su personalidad y características" value={formData.descripcion} onChange={handleChange} required/>
 
-          <input name="fotoanimal_url" placeholder="URL de la foto" value={formData.fotoanimal_url} onChange={handleChange} />
-          
+          <div className="form-group">
+            <label htmlFor="foto">Foto del animalito</label>
+            <input id="foto" type="file" name="foto" accept="image/*" onChange={handleChange} />
+          </div>
+
           <div className="form-group-checkbox">
             <label htmlFor="disponibilidad">Disponible para adopción</label>
             <input id="disponibilidad" type="checkbox" name="disponibilidad" checked={formData.disponibilidad} onChange={handleChange} />
           </div>
-
 
           <div className="form-actions">
             <button type="submit" className="submit">Guardar</button>

@@ -22,6 +22,7 @@ db = MySQL(app)
 # modelos
 from app.modelo_usuario import Modelo_usuario
 from app.modelo_fundacion import Modelo_fundacion
+from app.modelo_eventos import Modelo_eventos
 
 # entidades
 from app.entidades.usuario import Usuario
@@ -33,14 +34,20 @@ login_manager.init_app(app)
 # Configuración de carpetas estáticas
 UPLOAD_FOLDER_FUNDACIONES = os.path.join(os.path.dirname(__file__), 'static', 'fundaciones')
 UPLOAD_FOLDER_ANIMALES = os.path.join(os.path.dirname(__file__), 'static', 'animales')
+UPLOAD_FOLDER_USUARIOS = os.path.join(os.path.dirname(__file__), 'static', 'usuarios')
+UPLOAD_FOLDER_EVENTOS = os.path.join(os.path.dirname(__file__), 'static', 'eventos')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 app.config['UPLOAD_FOLDER_FUNDACIONES'] = UPLOAD_FOLDER_FUNDACIONES
 app.config['UPLOAD_FOLDER_ANIMALES'] = UPLOAD_FOLDER_ANIMALES
+app.config['UPLOAD_FOLDER_USUARIOS'] = UPLOAD_FOLDER_USUARIOS
+app.config['UPLOAD_FOLDER_EVENTOS'] = UPLOAD_FOLDER_EVENTOS
 
 # Asegurarse de que las carpetas existan
 os.makedirs(UPLOAD_FOLDER_FUNDACIONES, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER_ANIMALES, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER_USUARIOS, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER_EVENTOS, exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -49,7 +56,8 @@ def allowed_file(filename):
 def load_user(user_id):
     # Buscar usuario normal
     cursor = db.connection.cursor()
-    cursor.execute("SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id FROM usuarios WHERE cedula = %s", (user_id,))
+    sql = "SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios WHERE cedula = %s"
+    cursor.execute(sql, (user_id,))
     row = cursor.fetchone()
     if row:
         user = Usuario(*row)
@@ -337,13 +345,61 @@ def editar_descripcion_fundacion():
     except Exception as e:
         return jsonify({'success': False, 'error': 'Error al actualizar la descripción'}), 500
 
+@app.route('/api/actualizar_fundacion', methods=['POST'])
+def actualizar_fundacion():
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    datos_actualizar = request.get_json()
+    nit_fundacion = current_user.get_id()
+
+    exito = Modelo_fundacion.actualizar_fundacion(db, nit_fundacion, datos_actualizar)
+
+    if exito:
+        fundacion_actualizada = Modelo_fundacion.obtener_fundacion(db, nit_fundacion)
+        return jsonify({
+            'success': True, 
+            'message': 'Datos de la fundación actualizados con éxito', 
+            'fundacion': fundacion_actualizada
+        })
+    else:
+        return jsonify({'success': False, 'error': 'Error al actualizar los datos de la fundación'}), 500
+
+@app.route('/api/eliminar_fundacion', methods=['DELETE'])
+def eliminar_fundacion():
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    nit_fundacion = current_user.get_id()
+    
+    # Primero, eliminar todos los animales de la fundación
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute("DELETE FROM Animales WHERE fundacion_id = %s", (nit_fundacion,))
+        db.connection.commit()
+    except Exception as ex:
+        print('Error al eliminar animales de la fundación:', ex)
+        db.connection.rollback()
+        return jsonify({'success': False, 'error': 'Error al eliminar los animales de la fundación'}), 500
+
+    # Luego, eliminar la fundación
+    exito = Modelo_fundacion.eliminar_fundacion(db, nit_fundacion)
+
+    if exito:
+        return jsonify({
+            'success': True, 
+            'message': 'Fundación eliminada con éxito'
+        })
+    else:
+        return jsonify({'success': False, 'error': 'Error al eliminar la fundación'}), 500
+
 @app.route('/api/agregar_animal', methods=['POST'])
 def agregar_animal():
     if not hasattr(current_user, 'nit'):
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
     
     try:
-        data = request.get_json()
+        data = request.form
         cursor = db.connection.cursor()
 
         cursor.execute("SELECT fundacion_id FROM Fundaciones WHERE nit = %s", (current_user.nit,))
@@ -357,28 +413,36 @@ def agregar_animal():
         if not all(field in data and str(data[field]).strip() for field in required_fields):
             return jsonify({'success': False, 'error': 'Faltan campos requeridos'}), 400
         
+        # Insertar animal sin foto primero para obtener el ID
         sql = """
             INSERT INTO animales (
                 fundacion_id, nombre, tipo_animal, edad, peso, 
-                condicion, descripcion, fotoanimal_url, fecha_ingreso, 
+                condicion, descripcion, fecha_ingreso, 
                 disponibilidad, genero, raza
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_DATE, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE, %s, %s, %s)
         """
+        disponibilidad = data.get('disponibilidad') == 'true'
         cursor.execute(sql, (
-            fundacion_id,
-            data['nombre'],
-            data['tipo_animal'].lower(),
-            int(data['edad']),
-            float(data['peso']),
-            data.get('condicion', ''),
-            data.get('descripcion', ''),
-            data.get('fotoanimal_url'), 
-            data.get('disponibilidad', True),
-            data['genero'].lower(),
-            data.get('raza', '')
+            fundacion_id, data['nombre'], data['tipo_animal'].lower(), int(data['edad']),
+            float(data['peso']), data.get('condicion', ''), data.get('descripcion', ''),
+            disponibilidad, data['genero'].lower(), data.get('raza', '')
         ))
         db.connection.commit()
         animal_id = cursor.lastrowid
+
+        # Ahora, manejar la foto
+        fotoanimal_url = None
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(f"{animal_id}_{file.filename}")
+                filepath = os.path.join(app.config['UPLOAD_FOLDER_ANIMALES'], filename)
+                file.save(filepath)
+                fotoanimal_url = f"/static/animales/{filename}"
+                
+                # Actualizar el registro del animal con la URL de la foto
+                cursor.execute("UPDATE animales SET fotoanimal_url = %s WHERE animal_id = %s", (fotoanimal_url, animal_id))
+                db.connection.commit()
 
         # Devolver el animal recién creado
         cursor.execute("""
@@ -406,13 +470,9 @@ def editar_animal(animal_id):
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
     
     try:
-        data = request.get_json()
-        
-        disponibilidad_para_db = 1 if data.get('disponibilidad') else 0
-
+        data = request.form
         cursor = db.connection.cursor()
 
-        # Primero obtenemos la fundacion_id del usuario actual
         cursor.execute("SELECT fundacion_id FROM Fundaciones WHERE nit = %s", (current_user.nit,))
         fundacion = cursor.fetchone()
         if not fundacion:
@@ -439,36 +499,31 @@ def editar_animal(animal_id):
         if str(animal_fundacion_id) != str(user_fundacion_id):
             return jsonify({'success': False, 'error': 'No autorizado para editar este animal'}), 403
 
-        # Validar datos requeridos
-        required_fields = ['nombre', 'tipo_animal', 'genero', 'edad', 'peso']
-        for field in required_fields:
-            if field not in data or not str(data[field]).strip():
-                return jsonify({'success': False, 'error': f'El campo {field} es requerido'}), 400
+        # Manejar la foto si se sube una nueva
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and allowed_file(file.filename):
+                # Opcional: eliminar la foto antigua
+                # ...
+                filename = secure_filename(f"{animal_id}_{file.filename}")
+                filepath = os.path.join(app.config['UPLOAD_FOLDER_ANIMALES'], filename)
+                file.save(filepath)
+                fotoanimal_url = f"/static/animales/{filename}"
+                cursor.execute("UPDATE animales SET fotoanimal_url = %s WHERE animal_id = %s", (fotoanimal_url, animal_id))
 
         # Actualizar los datos del animal
+        disponibilidad = data.get('disponibilidad') == 'true'
         cursor.execute("""
             UPDATE animales 
-            SET nombre = %s, 
-                tipo_animal = %s, 
-                genero = %s, 
-                raza = %s,
-                edad = %s, 
-                peso = %s, 
-                condicion = %s, 
-                descripcion = %s,
+            SET nombre = %s, tipo_animal = %s, genero = %s, raza = %s,
+                edad = %s, peso = %s, condicion = %s, descripcion = %s,
                 disponibilidad = %s
             WHERE animal_id = %s
             """, (
-                data['nombre'],
-                data['tipo_animal'].lower(),
-                data['genero'].lower(),
-                data.get('raza', ''),
-                int(data['edad']),
-                float(data['peso']),
-                data.get('condicion', ''),
-                data.get('descripcion', ''),
-                disponibilidad_para_db,
-                animal_id
+                data['nombre'], data['tipo_animal'].lower(), data['genero'].lower(),
+                data.get('raza', ''), int(data['edad']), float(data['peso']),
+                data.get('condicion', ''), data.get('descripcion', ''),
+                disponibilidad, animal_id
             ))
             
         db.connection.commit()
@@ -484,7 +539,6 @@ def editar_animal(animal_id):
         """, (animal_id,))
         
         updated_animal = cursor.fetchone()
-
         if updated_animal:
             columns = [desc[0] for desc in cursor.description]
             animal_dict = convert_to_dict(updated_animal, columns)
@@ -496,8 +550,6 @@ def editar_animal(animal_id):
         else:
             return jsonify({'success': False, 'error': 'Error al obtener los datos actualizados'}), 404
         
-    except ValueError as e:
-        return jsonify({'success': False, 'error': 'Error en el formato de los datos: ' + str(e)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -614,6 +666,275 @@ def serve_fundacion_image(filename):
 @app.route('/static/animales/<path:filename>')
 def serve_animal_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER_ANIMALES'], filename)
+
+# ===============================================
+# ============ CRUD USUARIO (MI CUENTA) =========
+# ===============================================
+
+@app.route('/api/mi_cuenta', methods=['GET'])
+def mi_cuenta():
+    if not current_user.is_authenticated or hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    usuario = Modelo_usuario.obtener_usuario(db, current_user.get_id())
+    if usuario:
+        usuario_dict = {
+            'cedula': usuario.cedula,
+            'nombre': usuario.nombre,
+            'telefono': usuario.telefono,
+            'email': usuario.email,
+            'direccion': usuario.direccion,
+            'edad': usuario.edad,
+            'usuariofoto_url': usuario.usuariofoto_url,
+        }
+        return jsonify({'success': True, 'usuario': usuario_dict})
+    return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+
+
+@app.route('/api/actualizar_mi_cuenta', methods=['POST'])
+def actualizar_mi_cuenta():
+    if not current_user.is_authenticated or hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    datos_actualizar = request.form.to_dict()
+    
+    # Manejar subida de foto
+    if 'foto' in request.files:
+        file = request.files['foto']
+        if file and file.filename != '' and allowed_file(file.filename):
+            filename = secure_filename(f"{current_user.get_id()}_usuario.{file.filename.rsplit('.', 1)[1].lower()}")
+            filepath = os.path.join(app.config['UPLOAD_FOLDER_USUARIOS'], filename)
+            
+            # Eliminar foto antigua si existe
+            usuario_actual = Modelo_usuario.obtener_usuario(db, current_user.get_id())
+            if usuario_actual and usuario_actual.usuariofoto_url:
+                try:
+                    antigua_foto_path = os.path.join(current_app.root_path, '..', usuario_actual.usuariofoto_url.lstrip('/'))
+                    if os.path.exists(antigua_foto_path):
+                        os.remove(antigua_foto_path)
+                except Exception as e:
+                    print(f"Error eliminando foto antigua de usuario: {e}")
+
+            file.save(filepath)
+            datos_actualizar['usuariofoto_url'] = f"/static/usuarios/{filename}"
+        elif file.filename != '':
+            return jsonify({'success': False, 'error': 'Tipo de archivo no permitido'}), 400
+
+    exito = Modelo_usuario.actualizar_usuario(db, current_user.get_id(), datos_actualizar)
+    
+    if exito:
+        usuario_actualizado = Modelo_usuario.obtener_usuario(db, current_user.get_id())
+        usuario_dict = {
+            'cedula': usuario_actualizado.cedula,
+            'nombre': usuario_actualizado.nombre,
+            'telefono': usuario_actualizado.telefono,
+            'email': usuario_actualizado.email,
+            'direccion': usuario_actualizado.direccion,
+            'edad': usuario_actualizado.edad,
+            'usuariofoto_url': usuario_actualizado.usuariofoto_url
+        }
+        return jsonify({'success': True, 'message': 'Datos actualizados con éxito', 'usuario': usuario_dict})
+    else:
+        return jsonify({'success': False, 'error': 'Error al actualizar los datos'}), 500
+
+
+@app.route('/api/eliminar_mi_cuenta', methods=['DELETE'])
+def eliminar_mi_cuenta():
+    if not current_user.is_authenticated or hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    
+    cedula = current_user.get_id()
+    exito = Modelo_usuario.eliminar_usuario(db, cedula)
+    
+    if exito:
+        return jsonify({'success': True, 'message': 'Cuenta eliminada con éxito'})
+    else:
+        return jsonify({'success': False, 'error': 'Error al eliminar la cuenta'}), 500
+
+# ===============================================
+# ============ FIN CRUD USUARIO =================
+# ===============================================
+
+@app.route('/static/usuarios/<path:filename>')
+def serve_user_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER_USUARIOS'], filename)
+
+@app.route('/static/eventos/<path:filename>')
+def serve_event_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER_EVENTOS'], filename)
+
+# === Rutas para Eventos ===
+@app.route('/api/eventos', methods=['GET'])
+def listar_eventos_fundacion_actual():
+    """Lista los eventos de la fundación actualmente autenticada."""
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT fundacion_id FROM Fundaciones WHERE nit = %s", (current_user.nit,))
+        fundacion = cursor.fetchone()
+
+        if not fundacion:
+            return jsonify({'success': False, 'error': 'Fundación no encontrada'}), 404
+            
+        eventos = Modelo_eventos.listar_eventos_por_fundacion(db, fundacion[0])
+        
+        eventos_adaptados = [{
+            'id': e['Id_evento'],
+            'titulo': e['nombreEvento'],
+            'fecha_hora': e['fecha_hora'],
+            'lugar': e['nombrelugar'],
+            'descripcion': e['Descripcion'],
+            'fundacion_id': e['fundacion_id'],
+            'imagen_url': e.get('evento_imagen')
+        } for e in eventos]
+
+        return jsonify({'success': True, 'eventos': eventos_adaptados})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/eventos', methods=['POST'])
+def crear_evento():
+    """Crea un nuevo evento para la fundación autenticada."""
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    
+    try:
+        datos_form = request.form
+        datos_evento_modelo = {
+            'nombreEvento': datos_form.get('titulo'),
+            'nombrelugar': datos_form.get('lugar'),
+            'fecha': datos_form.get('fecha_hora'),
+            'Descripcion': datos_form.get('descripcion'),
+            'evento_imagen': None
+        }
+
+        required_fields = ['nombreEvento', 'nombrelugar', 'fecha', 'Descripcion']
+        if not all(datos_evento_modelo.get(field) for field in required_fields):
+            return jsonify({'success': False, 'error': 'Todos los campos son obligatorios'}), 400
+        
+        nuevo_id = Modelo_eventos.crear_evento(db, datos_evento_modelo, current_user.nit)
+        
+        if not nuevo_id:
+            return jsonify({'success': False, 'error': 'No se pudo crear el evento en la base de datos'}), 500
+
+        if 'imagen' in request.files:
+            file = request.files['imagen']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(f"evento_{nuevo_id}.{file.filename.rsplit('.', 1)[1].lower()}")
+                filepath = os.path.join(app.config['UPLOAD_FOLDER_EVENTOS'], filename)
+                file.save(filepath)
+                imagen_url = f"/static/eventos/{filename}"
+                Modelo_eventos.actualizar_evento(db, nuevo_id, {'evento_imagen': imagen_url})
+
+        evento_creado_raw = Modelo_eventos.obtener_evento(db, nuevo_id)
+        evento_creado = {
+            'id': evento_creado_raw['Id_evento'],
+            'titulo': evento_creado_raw['nombreEvento'],
+            'fecha_hora': evento_creado_raw['fecha_hora'],
+            'lugar': evento_creado_raw['nombrelugar'],
+            'descripcion': evento_creado_raw['Descripcion'],
+            'imagen_url': evento_creado_raw.get('evento_imagen')
+        }
+        return jsonify({'success': True, 'message': 'Evento creado con éxito', 'evento': evento_creado}), 201
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/eventos/<int:evento_id>', methods=['PUT'])
+def actualizar_evento(evento_id):
+    """Actualiza un evento existente."""
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    try:
+        # Verificación de propiedad del evento
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT fundacion_id FROM Fundaciones WHERE nit = %s", (current_user.nit,))
+        fundacion = cursor.fetchone()
+        evento = Modelo_eventos.obtener_evento(db, evento_id)
+        
+        if not fundacion or not evento or str(evento['fundacion_id']) != str(fundacion[0]):
+             return jsonify({'success': False, 'error': 'No autorizado para modificar este evento'}), 403
+
+        # Lógica de actualización
+        datos_form = request.form
+        datos_actualizar = {
+            'nombreEvento': datos_form.get('titulo'),
+            'nombrelugar': datos_form.get('lugar'),
+            'fecha': datos_form.get('fecha_hora'),
+            'Descripcion': datos_form.get('descripcion'),
+        }
+        
+        if 'imagen' in request.files:
+            file = request.files['imagen']
+            if file and allowed_file(file.filename):
+                if evento.get('evento_imagen'):
+                    try:
+                        old_path = os.path.join(app.static_folder, evento['evento_imagen'].split('/static/')[1])
+                        if os.path.exists(old_path): os.remove(old_path)
+                    except Exception as e: print(f"Error al eliminar imagen antigua: {e}")
+                
+                filename = secure_filename(f"evento_{evento_id}.{file.filename.rsplit('.', 1)[1].lower()}")
+                filepath = os.path.join(app.config['UPLOAD_FOLDER_EVENTOS'], filename)
+                file.save(filepath)
+                datos_actualizar['evento_imagen'] = f"/static/eventos/{filename}"
+
+        exito = Modelo_eventos.actualizar_evento(db, evento_id, datos_actualizar)
+        
+        if exito:
+            evento_actualizado_raw = Modelo_eventos.obtener_evento(db, evento_id)
+            evento_actualizado = {
+                'id': evento_actualizado_raw['Id_evento'],
+                'titulo': evento_actualizado_raw['nombreEvento'],
+                'fecha_hora': evento_actualizado_raw['fecha_hora'],
+                'lugar': evento_actualizado_raw['nombrelugar'],
+                'descripcion': evento_actualizado_raw['Descripcion'],
+                'imagen_url': evento_actualizado_raw.get('evento_imagen')
+            }
+            return jsonify({'success': True, 'message': 'Evento actualizado', 'evento': evento_actualizado})
+        else:
+            return jsonify({'success': False, 'error': 'Error al actualizar el evento'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/eventos/<int:evento_id>', methods=['DELETE'])
+def eliminar_evento(evento_id):
+    """Elimina un evento existente."""
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    
+    try:
+        # Verificación de propiedad
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT fundacion_id FROM Fundaciones WHERE nit = %s", (current_user.nit,))
+        fundacion = cursor.fetchone()
+        evento = Modelo_eventos.obtener_evento(db, evento_id)
+
+        if not fundacion or not evento or str(evento['fundacion_id']) != str(fundacion[0]):
+            return jsonify({'success': False, 'error': 'No autorizado para eliminar este evento'}), 403
+
+        # Lógica de borrado de imagen
+        if evento.get('evento_imagen'):
+            try:
+                image_path = os.path.join(app.static_folder, evento['evento_imagen'].split('/static/')[1])
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+            except Exception as e:
+                print(f"Error al eliminar la imagen del evento: {e}")
+
+        # Lógica de borrado de BD
+        if Modelo_eventos.eliminar_evento(db, evento_id):
+            return jsonify({'success': True, 'message': 'Evento eliminado correctamente'})
+        else:
+            return jsonify({'success': False, 'error': 'No se pudo eliminar el evento'})
+            
+    except Exception as e:
+        db.connection.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 print("STATIC FOLDER ABSOLUTE PATH:", app.static_folder)
 

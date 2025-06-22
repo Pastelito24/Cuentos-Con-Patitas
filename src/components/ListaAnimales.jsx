@@ -3,6 +3,7 @@ import './ListaAnimales.css';
 
 const ListaAnimales = ({ animales, onEdit, onAnimalDeleted }) => {
   const [error, setError] = useState(null);
+  const [imageErrors, setImageErrors] = useState({});
 
   if (!animales || animales.length === 0) return <div className="no-animales">No hay animalitos registrados.</div>;
   
@@ -13,6 +14,13 @@ const ListaAnimales = ({ animales, onEdit, onAnimalDeleted }) => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleImageError = (animalId) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [animalId]: true
+    }));
   };
 
   const handleDelete = async (animalId) => {
@@ -34,6 +42,13 @@ const ListaAnimales = ({ animales, onEdit, onAnimalDeleted }) => {
     }
   };
 
+  const AnimalImagePlaceholder = ({ animal }) => (
+    <div className="animal-image-placeholder">
+      <i className="fas fa-paw"></i>
+      <span>Foto no disponible</span>
+    </div>
+  );
+
   return (
     <div className="lista-animales-grid">
       {error && (
@@ -49,12 +64,16 @@ const ListaAnimales = ({ animales, onEdit, onAnimalDeleted }) => {
           style={{ animationDelay: `${index * 0.05}s` }}
         >
           <div className="animal-card-header">
-            <img 
-              src={animal.fotoanimal_url || '/placeholder-pet.png'} 
-              alt={animal.nombre} 
-              className="animal-card-imagen"
-              onError={(e) => { e.target.src = '/placeholder-pet.png'; }}
-            />
+            {!imageErrors[animal.animal_id] && animal.fotoanimal_url ? (
+              <img 
+                src={animal.fotoanimal_url} 
+                alt={animal.nombre} 
+                className="animal-card-imagen"
+                onError={() => handleImageError(animal.animal_id)}
+              />
+            ) : (
+              <AnimalImagePlaceholder animal={animal} />
+            )}
             <div className={`disponibilidad-chip ${animal.disponibilidad ? 'disponible' : 'adoptado'}`}>
               {animal.disponibilidad ? 'Disponible' : 'No disponible'}
             </div>

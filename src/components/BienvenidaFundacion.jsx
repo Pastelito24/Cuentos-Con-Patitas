@@ -101,7 +101,7 @@ const BienvenidaFundacion = () => {
             </div>
           </div>
           <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</a>
+            <Link to="/eventos" className="nav-link-animada" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</Link>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
             <div className="fundacion-dropdown-container" style={{ position: 'relative', display: 'inline-block' }}>
               <Link className="nav-link-animada" to="/mifundacion" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
@@ -248,37 +248,20 @@ const BienvenidaFundacion = () => {
             fontFamily: 'inherit',
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
-            animation: 'bubbleIn 0.25s',
-          }}>
-            ¡Hola fundación!
-            <span style={{
-              position: 'absolute',
-              left: '88%',
-              bottom: -16,
-              width: 0,
-              height: 0,
-              borderLeft: '10px solid transparent',
-              borderRight: '10px solid transparent',
-              borderTop: '16px solid #fff',
-              filter: 'drop-shadow(0 2px 4px #E28F5444)'
-            }}></span>
-          </div>
+            animation: 'bubble-appear 0.4s 0.1s forwards cubic-bezier(.2, .8, .4, 1)',
+            transform: 'translate(25%, 25%) rotate(10deg)',
+            opacity: 0,
+          }}>¡Hola!</div>
         )}
         <img
           src={corgiCulon}
-          alt="Corgi culón"
-          style={{
-            width: 120,
-            cursor: 'pointer',
-            opacity: 0.97,
-            zIndex: 50,
-          }}
+          alt="Corgi de espaldas"
+          style={{ width: 140 }}
           onClick={() => setShowBubble(true)}
+          className="corgi-hover"
         />
       </div>
-      {/* Tipografía para iconos FontAwesome */}
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-      {/* Estilos animados para el navbar */}
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
       <style>{`
         .nav-link-animada {
           position: relative;
@@ -306,21 +289,31 @@ const BienvenidaFundacion = () => {
         .logout-dropdown {
           display: none;
         }
-        .fundacion-dropdown-container:hover .logout-dropdown,
-        .logout-dropdown:hover {
+        .fundacion-dropdown-container:hover .logout-dropdown {
           display: block !important;
         }
         .logout-dropdown button:hover {
           background: #FFF8F0;
         }
+        .corgi-hover {
+          transition: transform 0.2s ease-in-out;
+        }
+        .corgi-hover:hover {
+          transform: scale(1.08) rotate(-5deg);
+        }
+        @keyframes bubble-appear {
+          to {
+            transform: translate(0, 0) rotate(0);
+            opacity: 1;
+          }
+        }
         .icon-whatsapp-ajustado {
-          transform: scale(1.18);
-          display: inline-block;
+          transform: translateY(1px);
         }
-        @keyframes bubbleIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        a:hover .fa-whatsapp { color: #25D366; }
+        a:hover .fa-facebook { color: #1877F2; }
+        a:hover .fa-x-twitter { color: #1DA1F2; }
+        a:hover .fa-instagram { color: #E4405F; }
         .logo-titulo-navbar span {
           position: relative;
           transition: color 0.2s;
