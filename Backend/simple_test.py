@@ -6,9 +6,9 @@ def test_simple_connection():
     # Configuración
     host = 'localhost'
     user = 'root'
-    password = '1234'
+    password = ''
     database = 'bd_cuentosconpatitas'
-    port = 3307
+    port = 3306
     
     print(f"Intentando conectar a:")
     print(f"Host: {host}")

@@ -77,7 +77,7 @@ const AdopcionFundacion = () => {
                     </div>
                     <div className="adopcion-card-row">
                       <span className="adopcion-card-label">Fecha:</span>
-                      <span>{adop.fecha_adopcion}</span>
+                      <span>{adop.fecha_adopcion /*&& adop.fecha_adopcion.slice(0, 16)*/}</span>
                       <span className="adopcion-card-label" style={{marginLeft: '2rem'}}>Estado:</span>
                       <span>{adop.estado_adopcion}</span>
                     </div>

@@ -126,7 +126,8 @@ const Eventos = () => {
             </div>
           </div>
           <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
-            <Link to="/eventos" className="nav-link-animada" style={{ color: '#E28F54', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</Link>
+            <Link to="/eventos" className="nav-link-animada" style={{ textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</Link>
+            <Link to="/AdopcionFundacion" className="nav-link-animada" style={{ textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Adopciones</Link>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
             <div className="fundacion-dropdown-container" style={{ position: 'relative', display: 'inline-block' }}>
               <Link className="nav-link-animada" to="/mifundacion" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>

@@ -90,15 +90,82 @@ def enviar_correo_adopcion(db, datos):
     # 4. Preparar el correo
     asunto = f"Solicitud de adopción para {animal[0]}"
     cuerpo = f"""
-    Hola {fundacion[0]},
-    
-    El usuario {usuario[0]} con # de Cédula: {usuario[1]} y Email: {usuario[2]} ha solicitado adoptar a:
-    
-    - Al {animal[1]} de Nombre: {animal[0]}, raza: {animal[2]} y edad: {animal[3]}
-    - Descripción de la mascota: {animal[4]}
-    - Fecha de solicitud: {datos['fecha']}
-    
-    Por favor, póngase en contacto con el usuario para continuar el proceso.
+    <html>
+    <head>
+      <link href='https://fonts.googleapis.com/css?family=Fredoka+One&display=swap' rel='stylesheet'>
+      <style>
+        body {{
+          background-image: url("https://raw.githubusercontent.com/Pastelito24/Cuentos-Con-Patitas/main/Backend/static/fundaciones/85214963_fundacion.jpg");
+          background-size: cover;
+          font-family: 'Fredoka One', 'Comic Sans MS', 'Arial Rounded MT Bold', Arial, sans-serif;
+          color: #5a3c1a;
+          padding: 0;
+          margin: 0;
+          min-height: 100vh;
+        }}
+        .card {{
+          background: #fff;
+          border-radius: 18px;
+          box-shadow: 0 2px 12px rgba(90,60,26,0.08);
+          padding: 32px 28px;
+          max-width: 600px;
+          margin: 40px auto;
+        }}
+        .titulo {{
+          font-size: 2rem;
+          color: #ff914d;
+          font-family: 'Fredoka One', 'Comic Sans MS', cursive, sans-serif;
+          margin-bottom: 18px;
+          text-align: center;
+        }}
+        .dato, .footer {{
+          font-size: 1.1rem;
+          margin-bottom: 12px;
+        }}
+        .dato strong {{
+          color: #ff914d;
+        }}
+        .footer {{
+          margin-top: 28px;
+          font-size: 1rem;
+          color: #a67c52;
+          text-align: center;
+        }}
+        a {{
+          color: #ff914d;
+          text-decoration: none;
+        }}
+        .animal-info {{
+          background: #fff6e9;
+          border-radius: 12px;
+          padding: 14px 18px;
+          margin: 18px 0;
+          font-size: 0.8rem;
+        }}
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="titulo">Solicitud de adopción para {animal[0]}</div>
+        <div class="dato"><b>Hola {fundacion[0]},</b></div>
+        <div class="dato">
+          El usuari@ <strong>{usuario[0]}</strong> con número de cédula <strong>{usuario[1]}</strong> y email <a href=\"mailto:{usuario[2]}\">{usuario[2]}</a> ha solicitado adoptar a:
+        </div>
+        <div class="animal-info">
+          <b>Al pequeñ@ {animal[1]}</b> de nombre <b>{animal[0]},</b> raza <b>{animal[2]}</b> y edad <b>{animal[3]} años</b>.<br><br>
+          <b>Personalidad del pequeñ@ {animal[0]}: </b>
+          <i>{animal[4]}</i>
+        </div>
+        <div class="dato">
+          <b>Fecha de solicitud:</b> {str(datos['fecha'])[:10]}
+        </div>
+        <div class="footer">
+          Por favor, póngase en contacto con el usuario para continuar el proceso.<br>
+          <i>🐾 Gracias por usar Cuentos Con Patitas 🐾</i>
+        </div>
+      </div>
+    </body>
+    </html>
     """
 
     # 5. Enviar el correo (ajusta los datos SMTP a los de tu servidor/correo)
@@ -110,7 +177,7 @@ def enviar_correo_adopcion(db, datos):
     msg['From'] = remitente
     msg['To'] = destinatario
     msg['Subject'] = asunto
-    msg.attach(MIMEText(cuerpo, 'plain'))
+    msg.attach(MIMEText(cuerpo, 'html'))
 
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -150,7 +217,16 @@ def listar_adopciones_por_fundacion(db, fundacion_id):
         cursor.execute(sql, (fundacion_id,))
         rows = cursor.fetchall()
         columns = [desc[0] for desc in cursor.description]
-        return [dict(zip(columns, row)) for row in rows]
+        # retornar fecha hora y dia
+        #return [dict(zip(columns, row)) for row in rows]
+        adopciones = []
+        for row in rows:
+            adopcion = dict(zip(columns, row))
+            # Formatear la fecha para que solo muestre YYYY-MM-DD
+            if adopcion.get('fecha_adopcion'):
+                adopcion['fecha_adopcion'] = str(adopcion['fecha_adopcion'])[:10]
+            adopciones.append(adopcion)
+        return adopciones
     except Exception as ex:
         print('Error al listar adopciones por fundación:', ex)
         return []

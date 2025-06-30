@@ -7,9 +7,9 @@ class ConfiDesarrollo(Configu_llave_secreta):
     DEBUG = True
     MYSQL_HOST = 'localhost'
     MYSQL_USER = 'root'
-    MYSQL_PASSWORD = '1234'
+    MYSQL_PASSWORD = ''
     MYSQL_DB = 'bd_cuentosconpatitas'
-    MYSQL_PORT = 3307
+    MYSQL_PORT = 3306
 
 
 configu = {'desarrolloConfig': ConfiDesarrollo}
