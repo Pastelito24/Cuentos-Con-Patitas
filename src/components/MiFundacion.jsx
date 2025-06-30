@@ -6,7 +6,7 @@ import EditarFundacionCard from './EditarFundacionCard';
 import ConfirmacionModal from './ConfirmacionModal';
 import logoSinTexto from '../assets/img/logosintexto.png';
 import './MiFundacion.css';
-import { FaPlus, FaSignOutAlt, FaEdit, FaCamera, FaSave, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaSignOutAlt, FaEdit, FaCamera, FaSave, FaTrash, FaUserFriends, FaRegSmileBeam, FaRegCalendarAlt, FaMoneyBillWave, FaRegCommentDots, FaUserCircle } from 'react-icons/fa';
 
 const COLORS = {
   fondo: '#FFF8F0',
@@ -46,6 +46,9 @@ const MiFundacion = () => {
   const [refreshAnimales, setRefreshAnimales] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showDonantes, setShowDonantes] = useState(false);
+  const [donantes, setDonantes] = useState([]);
+  const [loadingDonantes, setLoadingDonantes] = useState(false);
   const navigate = useNavigate();
 
   const fileInputRef = useRef(null);
@@ -271,6 +274,24 @@ const MiFundacion = () => {
     }
   };
 
+  const handleOpenDonantes = async () => {
+    setShowDonantes(true);
+    setLoadingDonantes(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/donantes_fundacion', { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        setDonantes(data.donantes);
+      } else {
+        setDonantes([]);
+      }
+    } catch {
+      setDonantes([]);
+    } finally {
+      setLoadingDonantes(false);
+    }
+  };
+
   const FundacionImagePlaceholder = () => (
     <div className="fundacion-image-placeholder">
       <i className="fas fa-home"></i>
@@ -424,6 +445,32 @@ const MiFundacion = () => {
                   <p><strong><i className="fas fa-user"></i> A cargo:</strong> {fundacion.persona_acargo}</p>
                 </div>
 
+                {(fundacion.banco || fundacion.numero_cuenta || fundacion.titular_cuenta) && (
+                  <div className="fundacion-bancaria">
+                    <div className="bancaria-header">
+                      <h4><i className="fas fa-university"></i> Información Bancaria</h4>
+                      <span className="bancaria-badge">Para donaciones</span>
+                    </div>
+                    <div className="bancaria-details">
+                      {fundacion.banco && (
+                        <p><strong><i className="fas fa-building"></i> Banco:</strong> {fundacion.banco}</p>
+                      )}
+                      {fundacion.tipo_cuenta && (
+                        <p><strong><i className="fas fa-credit-card"></i> Tipo de cuenta:</strong> {fundacion.tipo_cuenta}</p>
+                      )}
+                      {fundacion.numero_cuenta && (
+                        <p><strong><i className="fas fa-hashtag"></i> Número de cuenta:</strong> {fundacion.numero_cuenta}</p>
+                      )}
+                      {fundacion.titular_cuenta && (
+                        <p><strong><i className="fas fa-user-tie"></i> Titular:</strong> {fundacion.titular_cuenta}</p>
+                      )}
+                      {fundacion.telefono_contacto && (
+                        <p><strong><i className="fas fa-mobile-alt"></i> Teléfono Nequi:</strong> {fundacion.telefono_contacto}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="fundacion-descripcion">
                   <div className="descripcion-header">
                     <h4><i className="fas fa-info-circle"></i> Sobre nosotros</h4>
@@ -448,6 +495,10 @@ const MiFundacion = () => {
                     <p className="descripcion-texto">{fundacion.descripcion || 'No hay descripción disponible. ¡Añade una!'}</p>
                   )}
                 </div>
+
+                <button onClick={handleOpenDonantes} className="ver-donantes-btn pastel-menta">
+                  <FaUserFriends style={{ marginRight: 8, fontSize: 22, verticalAlign: 'middle' }} /> Ver donantes
+                </button>
               </div>
 
               <div className="fundacion-photo-section">
@@ -524,6 +575,15 @@ const MiFundacion = () => {
             onConfirm={handleDeleteFundacion}
             title="¿Estás seguro?"
             message="Esta acción eliminará permanentemente tu fundación y todos los animales asociados. Esta acción no se puede deshacer."
+          />
+        )}
+
+        {showDonantes && (
+          <DonantesModal
+            isOpen={showDonantes}
+            onClose={() => setShowDonantes(false)}
+            donantes={donantes}
+            loading={loadingDonantes}
           />
         )}
       </div>
@@ -624,6 +684,151 @@ const MiFundacion = () => {
           from { opacity: 1; transform: translateX(0); }
           to { opacity: 0; transform: translateX(100%); }
         }
+        .ver-donantes-btn.pastel-menta {
+          background: #c6f7e2;
+          color: #22796b;
+          border: none;
+          border-radius: 16px;
+          font-weight: bold;
+          font-size: 1.13rem;
+          padding: 12px 28px;
+          box-shadow: 0 2px 12px #a7d0f544;
+          margin-top: 12px;
+          margin-bottom: 0;
+          width: 100%;
+          transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .ver-donantes-btn.pastel-menta:hover {
+          background: #a8e6cf;
+          color: #4B3A2D;
+          box-shadow: 0 6px 24px #a7d0f544;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+const DonantesModal = ({ isOpen, onClose, donantes, loading }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="modal-donantes-bg">
+      <div className="modal-donantes-cute modal-donantes-amplio">
+        <button className="close-donantes-btn" onClick={onClose}>&times;</button>
+        <h2 className="donantes-title"><FaUserFriends style={{ color: '#E28F54', marginRight: 8 }} /> Donantes</h2>
+        {loading ? (
+          <div style={{ textAlign: 'center', margin: '2rem 0' }}><FaRegSmileBeam size={36} color="#E28F54" /> Cargando donantes...</div>
+        ) : donantes.length === 0 ? (
+          <div className="donantes-vacio">
+            <FaRegSmileBeam size={60} color="#E28F54" style={{ marginBottom: 12 }} />
+            <p style={{ color: '#E28F54', fontWeight: 'bold', fontSize: '1.2rem', marginTop: 16 }}>¡Aún no tienes donaciones!<br/>Cuando recibas una, aparecerán aquí 🐾</p>
+          </div>
+        ) : (
+          <div className="donantes-lista">
+            {donantes.map((d, idx) => (
+              <div className="donante-card-cute" key={d.donacion_id || idx}>
+                <div className="donante-card-header">
+                  {d.usuariofoto_url ? (
+                    <img src={d.usuariofoto_url} alt={d.nombre || 'Donante'} className="donante-foto" />
+                  ) : (
+                    <FaUserCircle size={48} color="#A7D0F5" style={{ marginRight: 10 }} />
+                  )}
+                  <div className="donante-nombre">{d.nombre || 'Donante anónimo'}</div>
+                  <div className="donante-tipo">
+                    <FaRegCommentDots style={{ color: '#E28F54', marginRight: 4 }} /> {d.Tipo_Donacion}
+                  </div>
+                </div>
+                <div className="donante-card-body">
+                  {d.monto && (
+                    <div className="donante-monto"><FaMoneyBillWave style={{ color: '#E28F54', marginRight: 4 }} /> <span style={{ color: '#E28F54', fontWeight: 'bold' }}>{`$${d.monto} ${d.moneda || 'COP'}`}</span></div>
+                  )}
+                  <div className="donante-fecha"><FaRegCalendarAlt style={{ color: '#A7D0F5', marginRight: 4 }} /> {d.fecha_donacion ? new Date(d.fecha_donacion).toLocaleDateString() : ''}</div>
+                  <div className="donante-descripcion">{d.Descripcion}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <style>{`
+        .modal-donantes-bg {
+          position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.25); z-index: 9999;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .modal-donantes-cute {
+          background: #FFF8F0;
+          border-radius: 24px;
+          padding: 56px 28px 28px 28px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+          min-width: 340px; max-width: 95vw; max-height: 80vh; overflow-y: auto;
+          position: relative;
+          animation: popIn 0.4s;
+        }
+        .modal-donantes-amplio {
+          min-width: 520px;
+          max-width: 700px;
+        }
+        .close-donantes-btn {
+          position: absolute; top: 20px; right: 28px;
+          font-size: 2rem; color: #e28f54; cursor: pointer; font-weight: bold;
+          background: rgba(255,255,255,0.95); border: none;
+          z-index: 10;
+          padding: 2px 10px;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px #E28F5444;
+          transition: background 0.2s, box-shadow 0.2s;
+        }
+        .close-donantes-btn:hover {
+          background: #fbe2cf;
+        }
+        .donantes-title {
+          text-align: center; color: #E28F54; font-size: 2.1rem; font-family: 'Edu NSW ACT Hand Pre', cursive; margin-bottom: 18px; margin-top: 10px;
+        }
+        .donantes-vacio { text-align: center; margin-top: 24px; }
+        .donantes-lista { display: flex; flex-direction: column; gap: 18px; }
+        .donante-card-cute {
+          background: #fff; border-radius: 16px; box-shadow: 0 2px 12px #E28F5444;
+          padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;
+          border: 2px solid #FBE2CF;
+          transition: box-shadow 0.2s, border 0.2s;
+        }
+        .donante-card-cute:hover {
+          box-shadow: 0 6px 24px #E28F5444;
+          border: 2px solid #E28F54;
+        }
+        .donante-card-header {
+          display: flex; align-items: center; gap: 12px; margin-bottom: 4px;
+        }
+        .donante-foto {
+          width: 48px; height: 48px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 2px solid #A7D0F5;
+        }
+        .donante-nombre { color: #4B3A2D; font-weight: bold; font-size: 1.1rem; }
+        .donante-tipo { color: #A7D0F5; font-size: 1rem; margin-left: auto; display: flex; align-items: center; }
+        .donante-monto { color: #E28F54; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; }
+        .donante-fecha { color: #7C6C5F; font-size: 0.98rem; display: flex; align-items: center; }
+        .donante-descripcion { color: #4B3A2D; font-size: 1.05rem; margin-top: 2px; }
+        .ver-donantes-btn.pastel-lila {
+          background: #e6d6f7;
+          color: #6d4c9c;
+          border: none;
+          border-radius: 16px;
+          font-weight: bold;
+          font-size: 1.13rem;
+          padding: 12px 28px;
+          box-shadow: 0 2px 12px #a7d0f544;
+          margin-top: 0;
+          margin-bottom: 0;
+          transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .ver-donantes-btn.pastel-lila:hover {
+          background: #d1b3f7;
+          color: #4B3A2D;
+          box-shadow: 0 6px 24px #a7d0f544;
+        }
+        @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
       `}</style>
     </div>
   );

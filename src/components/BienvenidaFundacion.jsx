@@ -43,6 +43,16 @@ const BienvenidaFundacion = () => {
   useEffect(() => {
     const fund = getFundacionFromLocalStorage();
     setFundacion(fund);
+    // Si la fundación está en el localStorage, se obtiene la información de la fundación
+    if (fund?.nit) {
+      fetch('http://localhost:5000/api/mi_fundacion', {
+        credentials: 'include'
+      })
+        .then(res => res.json())
+        .then(data => setFundacion(data));
+    } else {
+      setFundacion(fund);
+    }
     // Aquí podrías hacer fetch a los animales de la fundación si tienes endpoint
     // Por ahora, ejemplo vacío:
     // fetch(`/api/animales?fundacion_nit=${fund?.nit}`)
@@ -102,6 +112,8 @@ const BienvenidaFundacion = () => {
           </div>
           <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
             <Link to="/eventos" className="nav-link-animada" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</Link>
+            {/* Adopciones link ------------------------------ */}
+            <Link to="/adopcionfundacion" className="nav-link-animada" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Adopciones</Link>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
             <div className="fundacion-dropdown-container" style={{ position: 'relative', display: 'inline-block' }}>
               <Link className="nav-link-animada" to="/mifundacion" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem', cursor: 'pointer' }}>
@@ -202,11 +214,7 @@ const BienvenidaFundacion = () => {
             </span>
           </h3>
           <div style={{ color: COLORS.textoSec, fontSize: '1.18rem', marginBottom: 18, whiteSpace: 'pre-line', lineHeight: 1.6 }}>
-            <p><b>NIT:</b> {fundacion?.nit}</p>
-            <p><b>Dirección:</b> {fundacion?.direccion}</p>
-            <p><b>Teléfono:</b> {fundacion?.telefono}</p>
-            <p><b>Email:</b> {fundacion?.email}</p>
-            <p><b>Persona a cargo:</b> {fundacion?.persona_acargo}</p>
+            <p>Desde aquí puedes gestionar adopciones, crear eventos y dar a conocer tu fundación.</p>
           </div>
           <div style={{ display: 'flex', gap: 18, marginBottom: 24 }}>
             {socialLinks.map((s, i) => (

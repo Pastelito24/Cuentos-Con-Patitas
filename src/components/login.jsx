@@ -41,7 +41,7 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
         },
         credentials: 'include',
         body: JSON.stringify({
-          ...(tipoLogin === 'usuario' ? { email } : { nit: email }),
+          ...(tipoLogin === 'usuario' ? { cedula: email } : { nit: email }),
           password,
           rol: tipoLogin
         })
@@ -52,6 +52,11 @@ function Login({ onSwitchToRegister, onFormSubmit }) {
       if (response.ok) {
         if (tipoLogin === 'usuario') {
           localStorage.setItem('user', JSON.stringify(data.user));
+          if (data.user && data.user.usuario_id) {
+            localStorage.setItem('usuario_id', data.user.usuario_id);
+          } else if (data.user && data.user.cedula) {
+            localStorage.setItem('usuario_id', data.user.cedula);
+          }
         } else if (tipoLogin === 'fundacion' && data.fundacion) {
           localStorage.setItem('fundacion', JSON.stringify(data.fundacion));
         }

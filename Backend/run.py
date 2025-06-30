@@ -11,13 +11,24 @@ from flask_login import LoginManager, login_user, current_user
 from app.entidades.fundacion_user import FundacionUser
 from werkzeug.utils import secure_filename
 import os
+from app.historial_donacion import historial_bp
+from app.donantes_fundacion import donantes_bp
+from app.modelo_adopcion_usuario import registrar_adopcion, enviar_correo_adopcion, listar_adopciones_por_fundacion, actualizar_estado_adopcion, obtener_adopcion_en_proceso_o_reciente
 
 app = create_app()
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 app.config.from_object(configu['desarrolloConfig'])
 app.secret_key = 'cerrado123456'
+# Configuración de la cookie de sesión para desarrollo
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_DOMAIN'] = None
+app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutos
 
 db = MySQL(app)
+app.mysql = db
 
 # modelos
 from app.modelo_usuario import Modelo_usuario
@@ -30,6 +41,8 @@ from app.entidades.usuario import Usuario
 # flask-login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.session_protection = 'strong'
 
 # Configuración de carpetas estáticas
 UPLOAD_FOLDER_FUNDACIONES = os.path.join(os.path.dirname(__file__), 'static', 'fundaciones')
@@ -56,11 +69,23 @@ def allowed_file(filename):
 def load_user(user_id):
     # Buscar usuario normal
     cursor = db.connection.cursor()
-    sql = "SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios WHERE cedula = %s"
+    sql = "SELECT usuario_id, cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios WHERE cedula = %s"
     cursor.execute(sql, (user_id,))
     row = cursor.fetchone()
     if row:
-        user = Usuario(*row)
+        user = Usuario(
+            usuario_id=row[0],
+            cedula=row[1],
+            contrasena=row[2],
+            rol=row[3],
+            nombre=row[4],
+            telefono=row[5],
+            email=row[6],
+            direccion=row[7],
+            edad=row[8],
+            fundacion_id=row[9],
+            usuariofoto_url=row[10]
+        )
         return user
     # Buscar fundación por NIT
     cursor.execute("SELECT nit, nombre, email FROM Fundaciones WHERE nit = %s", (user_id,))
@@ -97,14 +122,17 @@ def login():
             else:
                 return jsonify({'status': 'error', 'message': 'Usuario o contraseña incorrectos'}), 401
         else:
-            user = Usuario(data['email'], data['password'])
+            user = Usuario(cedula=data['cedula'], contrasena=data['password'])
             usuario_logeado = Modelo_usuario.comprobar_user(db, user)
             if usuario_logeado is not None:
-                login_user(usuario_logeado)
+                print("Usuario logueado encontrado:", usuario_logeado.__dict__)
+                login_user(usuario_logeado, remember=True)
+                print("Usuario logueado con Flask-Login. ID:", usuario_logeado.get_id())
                 return jsonify({
                     'status': 'success',
                     'message': 'Login exitoso',
                     'user': {
+                        'usuario_id': usuario_logeado.usuario_id,
                         'cedula': usuario_logeado.cedula,
                         'nombre': usuario_logeado.nombre,
                         'email': usuario_logeado.email,
@@ -171,7 +199,12 @@ def register():
                 'email': data['email'],
                 'persona_acargo': data['persona_acargo'],
                 'contrasena': data['contrasena'],
-                'descripcion': data.get('descripcion', '')
+                'descripcion': data.get('descripcion', ''),
+                'banco': data.get('banco', None),
+                'tipo_cuenta': data.get('tipo_cuenta', None),
+                'numero_cuenta': data.get('numero_cuenta', None),
+                'titular_cuenta': data.get('titular_cuenta', None),
+                'telefono_contacto': data.get('telefono_contacto', None)
             }
             fundacion_creada = Modelo_fundacion.crear_fundacion(db, fundacion_data)
             if fundacion_creada:
@@ -184,15 +217,15 @@ def register():
             today = datetime.today()
             edad = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
             user = Usuario(
-                data['documentNumber'],
-                data['password'],
-                data.get('rol', 'Usuario'),
-                data['username'],
-                data['phone'],
-                data['email'],
-                data['address'],
-                edad,
-                fundacion_id
+                cedula=data['documentNumber'],
+                contrasena=data['password'],
+                rol=data.get('rol', 'Usuario'),
+                nombre=data['username'],
+                telefono=data['phone'],
+                email=data['email'],
+                direccion=data['address'],
+                edad=edad,
+                fundacion_id=fundacion_id
             )
             creado = Modelo_usuario.crear_usuario(db, user)
             if creado:
@@ -211,7 +244,7 @@ def register():
 @app.route('/api/fundaciones', methods=['GET'])
 def listar_fundaciones():
     cursor = db.connection.cursor()
-    cursor.execute("SELECT fundacion_id, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion FROM Fundaciones")
+    cursor.execute("SELECT fundacion_id, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto FROM Fundaciones")
     fundaciones = cursor.fetchall()
     keys = [desc[0] for desc in cursor.description]
     return jsonify([dict(zip(keys, row)) for row in fundaciones])
@@ -310,14 +343,14 @@ def mi_fundacion():
         cursor = db.connection.cursor()
         cursor.execute("""
             SELECT nit, nombre, direccion, telefono, email, 
-                   persona_acargo, foto_url, descripcion 
+                   persona_acargo, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto
             FROM Fundaciones 
             WHERE nit = %s
         """, (current_user.nit,))
         fundacion = cursor.fetchone()
         if fundacion:
             keys = ['nit', 'nombre', 'direccion', 'telefono', 'email', 
-                   'persona_acargo', 'foto_url', 'descripcion']
+                   'persona_acargo', 'foto_url', 'descripcion', 'banco', 'tipo_cuenta', 'numero_cuenta', 'titular_cuenta', 'telefono_contacto']
             fundacion_dict = dict(zip(keys, fundacion))
             return jsonify(fundacion_dict)
         return jsonify({}), 200
@@ -673,6 +706,13 @@ def serve_animal_image(filename):
 
 @app.route('/api/mi_cuenta', methods=['GET'])
 def mi_cuenta():
+    print("=== DEBUG MI CUENTA ===")
+    print("current_user:", current_user)
+    print("is_authenticated:", current_user.is_authenticated)
+    print("get_id:", current_user.get_id())
+    print("hasattr nit:", hasattr(current_user, 'nit'))
+    print("======================")
+    
     if not current_user.is_authenticated or hasattr(current_user, 'nit'):
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
@@ -936,7 +976,161 @@ def eliminar_evento(evento_id):
         db.connection.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+#EVENTOS INICIO
+
+@app.route('/api/eventos_inicio', methods=['GET'])
+def eventos_inicio():
+    """
+    Ruta para obtener eventos para mostrar en la página de inicio con rotación.
+    Excluye fundacion_id e Id_evento como solicitó el usuario.
+    """
+    try:
+        cursor = db.connection.cursor()
+        sql = """
+            SELECT f.nombre as nombre_fundacion, e.nombreEvento, e.nombrelugar, e.fecha, e.Descripcion, e.evento_imagen 
+            FROM Eventos e
+            JOIN Fundaciones f ON e.fundacion_id = f.fundacion_id
+            ORDER BY e.fecha DESC
+        """
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        eventos = []
+        for row in rows:
+            eventos.append({
+                'nombre_fundacion': row[0],
+                'nombreEvento': row[1],
+                'nombrelugar': row[2],
+                'fecha_hora': row[3].strftime('%Y-%m-%d %H:%M') if row[3] else None,
+                'Descripcion': row[4],
+                'evento_imagen': row[5]
+            })
+        return jsonify({'success': True, 'eventos': eventos})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 print("STATIC FOLDER ABSOLUTE PATH:", app.static_folder)
+
+# Importar y registrar el blueprint de donaciones
+def register_blueprints(app):
+    from app.routes_donaciones import donaciones_bp
+    app.register_blueprint(donaciones_bp)
+    app.register_blueprint(historial_bp)
+    app.register_blueprint(donantes_bp)
+
+register_blueprints(app)
+
+@app.route('/api/iniciar_pago', methods=['POST'])
+def iniciar_pago():
+    data = request.get_json()
+    db = app.mysql
+    try:
+        # Validar datos mínimos
+        required = ['usuario_id', 'fundacion_id', 'Tipo_Donacion', 'Descripcion', 'monto']
+        for field in required:
+            if not data.get(field):
+                return jsonify({'status': 'error', 'message': f'Falta el campo obligatorio: {field}'}), 400
+        cur = db.connection.cursor()
+        cur.execute(
+            '''INSERT INTO Donaciones
+                (usuario_id, nombre_usuario, cedula_usuario, fundacion_id, Tipo_Donacion, fecha_donacion, Descripcion, estado_pago, monto, moneda)
+               VALUES (%s, %s, %s, %s, %s, CURDATE(), %s, %s, %s, %s)''',
+            (
+                data['usuario_id'],
+                data.get('nombre_usuario', ''),
+                data.get('cedula_usuario', ''),
+                data['fundacion_id'],
+                data['Tipo_Donacion'],
+                data['Descripcion'],
+                'pendiente',
+                data['monto'],
+                data.get('moneda', 'COP')
+            )
+        )
+        db.connection.commit()
+        donacion_id = cur.lastrowid
+        cur.close()
+        # Simula una URL de pago (en integración real, aquí iría la URL de la pasarela)
+        url_pago = f"https://fake-pagos.com/pagar/{donacion_id}"
+        return jsonify({'status': 'success', 'donacion_id': donacion_id, 'url_pago': url_pago, 'message': 'Donación registrada, procede al pago.'})
+    except Exception as e:
+        print('ERROR EN INICIAR PAGO:', e)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+# ===============================================
+# ============ Registro de adopción ============
+# ===============================================
+# Solicitar adopción
+@app.route('/api/solicitar_adopcion', methods=['POST'])
+def solicitar_adopcion():
+    data = request.get_json()
+    # Primero registrar la adopción en la base de datos
+    exito_registro, mensaje_registro = registrar_adopcion(db, data)
+    if not exito_registro:
+        return jsonify({'success': False, 'error': mensaje_registro}), 400
+    # Luego enviar el correo
+    exito, mensaje = enviar_correo_adopcion(db, data)
+    if exito:
+        return jsonify({'success': True, 'message': mensaje})
+    else:
+        return jsonify({'success': False, 'error': mensaje}), 400
+
+# Listar adopciones por fundación --------
+@app.route('/api/adopciones_fundacion', methods=['GET'])
+def api_listar_adopciones_fundacion():
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT fundacion_id FROM Fundaciones WHERE nit = %s", (current_user.nit,))
+        fundacion = cursor.fetchone()
+        if not fundacion:
+            return jsonify({'success': False, 'error': 'Fundación no encontrada'}), 404
+        fundacion_id = fundacion[0]
+        adopciones = listar_adopciones_por_fundacion(db, fundacion_id)
+        return jsonify({'success': True, 'adopciones': adopciones})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Actualizar estado de adopción --------
+@app.route('/api/actualizar_estado_adopcion', methods=['POST'])
+def api_actualizar_estado_adopcion():
+    if not hasattr(current_user, 'nit'):
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+    data = request.get_json()
+    adopcion_id = data.get('adopcion_id')
+    nuevo_estado = data.get('nuevo_estado')
+    if not adopcion_id or nuevo_estado not in ['adoptado', 'no adoptado']:
+        return jsonify({'success': False, 'error': 'Datos inválidos'}), 400
+    exito, mensaje = actualizar_estado_adopcion(db, adopcion_id, nuevo_estado)
+    if exito:
+        return jsonify({'success': True, 'message': mensaje})
+    else:
+        return jsonify({'success': False, 'error': mensaje}), 400
+
+@app.route('/api/adopcion_actual/<int:animal_id>', methods=['GET'])
+def api_adopcion_actual(animal_id):
+    adopcion = obtener_adopcion_en_proceso_o_reciente(db, animal_id)
+    if adopcion:
+        return jsonify({'success': True, 'adopcion': adopcion})
+    else:
+        return jsonify({'success': False, 'error': 'No se encontró adopción para este animal'}), 404
+
+@app.route('/api/usuario', methods=['GET'])
+def obtener_usuario():
+    cedula = request.args.get('cedula')
+    if not cedula:
+        return jsonify({'error': 'Falta la cédula'}), 400
+    usuario = Modelo_usuario.obtener_usuario(db, cedula)
+    if usuario:
+        return jsonify({
+            'cedula': usuario.cedula,
+            'nombre': usuario.nombre,
+            'email': usuario.email,
+            'telefono': usuario.telefono,
+            'direccion': usuario.direccion,
+            'edad': usuario.edad,
+            'usuariofoto_url': usuario.usuariofoto_url
+        })
+    return jsonify({'error': 'Usuario no encontrado'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

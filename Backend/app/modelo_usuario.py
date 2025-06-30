@@ -9,17 +9,29 @@ class Modelo_usuario():
     def comprobar_user(self, db, user):
         try:
             cursor = db.connection.cursor()
-            sql = "SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios WHERE cedula = %s"
+            sql = "SELECT usuario_id, cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios WHERE cedula = %s"
             cursor.execute(sql, (user.cedula,))
             row = cursor.fetchone()
             print("Consulta SQL:", sql, "Valor:", user.cedula)
             print("Resultado de la consulta:", row)
             if row is not None:
                 print("Contraseña ingresada:", user.contrasena)
-                print("Contraseña en BD:", row[1])
-                if check_password_hash(row[1], user.contrasena):
+                print("Contraseña en BD:", row[2])
+                if check_password_hash(row[2], user.contrasena):
                     print("Contraseña válida")
-                    return Usuario(*row)
+                    return Usuario(
+                        usuario_id=row[0],
+                        cedula=row[1],
+                        contrasena=row[2],
+                        rol=row[3],
+                        nombre=row[4],
+                        telefono=row[5],
+                        email=row[6],
+                        direccion=row[7],
+                        edad=row[8],
+                        fundacion_id=row[9],
+                        usuariofoto_url=row[10]
+                    )
                 else:
                     print("Contraseña inválida")
                     return None
@@ -61,11 +73,23 @@ class Modelo_usuario():
     def obtener_usuario(cls, db, cedula):
         try:
             cursor = db.connection.cursor()
-            sql = "SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios WHERE cedula = %s"
+            sql = "SELECT usuario_id, cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios WHERE cedula = %s"
             cursor.execute(sql, (cedula,))
             row = cursor.fetchone()
             if row is not None:
-                return Usuario(*row)
+                return Usuario(
+                    usuario_id=row[0],
+                    cedula=row[1],
+                    contrasena=row[2],
+                    rol=row[3],
+                    nombre=row[4],
+                    telefono=row[5],
+                    email=row[6],
+                    direccion=row[7],
+                    edad=row[8],
+                    fundacion_id=row[9],
+                    usuariofoto_url=row[10]
+                )
             return None
         except Exception as ex:
             print('Error al obtener usuario:', ex)
@@ -142,19 +166,20 @@ class Modelo_usuario():
     def listar_usuarios(cls, db):
         try:
             cursor = db.connection.cursor()
-            sql = "SELECT cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios"
+            sql = "SELECT usuario_id, cedula, contrasena, rol, nombre, telefono, email, direccion, edad, fundacion_id, usuariofoto_url FROM usuarios"
             cursor.execute(sql)
             rows = cursor.fetchall()
             usuarios = []
             for row in rows:
                 usuarios.append({
-                    'cedula': row[0],
-                    'nombre': row[3],
-                    'telefono': row[4],
-                    'email': row[5],
-                    'direccion': row[6],
-                    'edad': row[7],
-                    'usuariofoto_url': row[9]
+                    'usuario_id': row[0],
+                    'cedula': row[1],
+                    'nombre': row[4],
+                    'telefono': row[5],
+                    'email': row[6],
+                    'direccion': row[7],
+                    'edad': row[8],
+                    'usuariofoto_url': row[10]
                 })
             return usuarios
         except Exception as ex:

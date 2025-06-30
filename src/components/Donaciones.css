@@ -368,4 +368,83 @@
   font-size: 0.9rem;
   font-weight: 500;
   color: #5c4e44;
+}
+
+.modal-thankyou {
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s;
+}
+.modal-content-thankyou {
+  background: #fff8f0;
+  border-radius: 20px;
+  padding: 36px 32px 28px 32px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  text-align: center;
+  position: relative;
+  animation: popIn 0.4s;
+}
+.close-thankyou {
+  position: absolute;
+  top: 12px; right: 18px;
+  font-size: 2rem;
+  color: #e28f54;
+  cursor: pointer;
+  font-weight: bold;
+}
+.btn-thankyou {
+  margin-top: 18px;
+  background: #e28f54;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-thankyou:hover {
+  background: #d17a3a;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes popIn {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.info-donacion-fundacion {
+  background: #FFF8F0;
+  border: 1.5px solid #E28F54;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.2rem;
+  margin-top: -0.5rem;
+  font-size: 1.08rem;
+  color: #4B3A2D;
+  box-shadow: 0 2px 10px rgba(226,143,84,0.07);
+  animation: fadeIn 0.3s;
+}
+.info-nequi {
+  color: #E28F54;
+  font-weight: bold;
+  font-size: 1.13rem;
+  margin-bottom: 0.3rem;
+}
+.info-bancaria {
+  color: #4B3A2D;
+  font-size: 1.08rem;
+  margin-bottom: 0.3rem;
+}
+.info-bancaria strong {
+  color: #E28F54;
+  font-weight: bold;
 } 

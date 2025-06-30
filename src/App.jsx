@@ -8,6 +8,7 @@ import BienvenidaFundacion from './components/BienvenidaFundacion';
 import MiCuenta from './components/MiCuenta';
 import MiFundacion from './components/MiFundacion';
 import Eventos from './components/Eventos';
+import EventosUsuario from './components/EventosUsuario';
 import './App.css'; // Asegúrate de importar los estilos globales
 import backgroundImage from './assets/img/fondoperrogato.jpg';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -15,6 +16,9 @@ import Loading from './components/Loading';
 import ListaFundaciones from './components/ListaFundaciones';
 import DetalleFundacion from './components/DetalleFundacion';
 import Donaciones from './components/Donaciones';
+// Importaciones para adopción
+import AdopcionRegistro from './components/AdopcionRegistro';
+import AdopcionFundacion from './components/AdopcionFundacion';
 
 // --- Componentes de Rutas Protegidas ---
 
@@ -74,6 +78,23 @@ function BackgroundWithRoutes() {
 
   const isAuthenticated = !!authInfo;
   const rol = authInfo?.tipo;
+
+  // Validación de sesión real para fundación
+  useEffect(() => {
+    if (rol === 'fundacion') {
+      fetch('http://localhost:5000/api/mi_fundacion', { credentials: 'include' })
+        .then(res => {
+          if (!res.ok) {
+            localStorage.removeItem('fundacion');
+            window.location.href = '/';
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('fundacion');
+          window.location.href = '/';
+        });
+    }
+  }, [rol]);
 
   // Fondo decorativo global solo en '/'
   const location = useLocation();
@@ -163,13 +184,22 @@ function BackgroundWithRoutes() {
           }
         />
         <Route
-          path="/eventos"
+          path="/adopcionfundacion"
           element={
             <RoleRoute
               isAuthenticated={isAuthenticated}
               userRole={rol}
               requiredRole="fundacion"
-              element={<Eventos />}
+              element={<AdopcionFundacion />}
+            />
+          }
+        />
+        <Route
+          path="/eventos"
+          element={
+            <AuthRoute
+              isAuthenticated={isAuthenticated}
+              element={rol === 'usuario' ? <EventosUsuario /> : <Eventos />}
             />
           }
         />

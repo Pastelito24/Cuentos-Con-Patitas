@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from './Navbar';
 import './DetalleFundacion.css';
+import './AdopcionRegistro.css';
 
 const COLORS = {
   fondo: '#FFF8F0', // Marfil suave
@@ -88,6 +89,20 @@ const DetalleFundacion = () => {
   const [showModal, setShowModal] = useState(false);
   const [fundacionImageError, setFundacionImageError] = useState(false);
   const [animalImageErrors, setAnimalImageErrors] = useState({});
+  const [showAdopcionModal, setShowAdopcionModal] = useState(false);
+  const [showAdopcionForm, setShowAdopcionForm] = useState(false);
+  const [adopcionForm, setAdopcionForm] = useState({
+    nombre: '',
+    cedula: '',
+    correo: '',
+    fecha: '',
+    fundacion: fundacion_id || '',
+    animal: '',
+    motivo: ''
+  });
+  const [adopcionLoading, setAdopcionLoading] = useState(false);
+  const [adopcionError, setAdopcionError] = useState('');
+  const [adopcionSuccess, setAdopcionSuccess] = useState('');
 
   useEffect(() => {
     const fetchFundacionDetails = async () => {
@@ -145,6 +160,82 @@ const DetalleFundacion = () => {
       [animalId]: true
     }));
   }, []);
+
+  const handleOpenAdopcionModal = (animal) => {
+    setShowAdopcionForm(true);
+    setAdopcionError('');
+    setAdopcionSuccess('');
+    const userRaw = localStorage.getItem('user');
+    if (userRaw) {
+      const user = JSON.parse(userRaw);
+      setAdopcionForm(prev => ({
+        ...prev,
+        nombre: user.nombre || '',
+        cedula: user.cedula || '',
+        correo: user.email || '',
+        animal: animal.animal_id,
+        fundacion: fundacion_id || '',
+        fecha: ''
+      }));
+    } else {
+      setAdopcionForm(prev => ({ ...prev, nombre: '', cedula: '', correo: '', animal: animal.animal_id, fundacion: fundacion_id || '', fecha: '' }));
+    }
+  };
+
+  const handleCloseAdopcionForm = () => {
+    setShowAdopcionForm(false);
+    setAdopcionError('');
+    setAdopcionSuccess('');
+  };
+
+  const handleAdopcionChange = (e) => {
+    const { name, value } = e.target;
+    setAdopcionForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAdopcionSubmit = async (e) => {
+    e.preventDefault();
+    setAdopcionLoading(true);
+    setAdopcionError('');
+    setAdopcionSuccess('');
+    const userRaw = localStorage.getItem('user');
+    if (!userRaw) {
+      setAdopcionError('Debes iniciar sesión para adoptar. Serás redirigido al login.');
+      setAdopcionLoading(false);
+      setTimeout(() => window.location.href = '/', 2000);
+      return;
+    }
+    if (!adopcionForm.fundacion || !adopcionForm.animal || !adopcionForm.fecha) {
+      setAdopcionError('Por favor completa todos los campos requeridos.');
+      setAdopcionLoading(false);
+      return;
+    }
+    try {
+      const data = {
+        usuario_id: JSON.parse(userRaw).cedula,
+        animal_id: adopcionForm.animal,
+        fundacion_id: adopcionForm.fundacion,
+        fecha: adopcionForm.fecha
+      };
+      console.log('Enviando solicitud de adopción:', data);
+      const response = await fetch('http://localhost:5000/api/solicitar_adopcion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (result.success) {
+        setAdopcionSuccess('¡Solicitud de adopción enviada con éxito! La fundación te contactará pronto.');
+        setTimeout(() => handleCloseAdopcionForm(), 3000);
+      } else {
+        setAdopcionError(result.error || 'Error al enviar la solicitud de adopción');
+      }
+    } catch (err) {
+      setAdopcionError('Error de conexión con el servidor. Intenta nuevamente.');
+    } finally {
+      setAdopcionLoading(false);
+    }
+  };
 
   const FundacionImagePlaceholder = () => (
     <div style={{
@@ -241,7 +332,7 @@ const DetalleFundacion = () => {
             <i className="fas fa-times" style={{ color: COLORS.texto }}></i>
           </button>
 
-          {/* Imagen del animal */}
+          {/* Imagen y nombre del animal siempre arriba */}
           <div style={{
             height: '300px',
             position: 'relative',
@@ -271,109 +362,336 @@ const DetalleFundacion = () => {
             </div>
           </div>
 
-          {/* Contenido del modal */}
-          <div style={{ padding: '2rem' }}>
-            {/* Grid de información básica */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '1.5rem',
-              marginBottom: '2rem',
-              padding: '1.5rem',
-              background: COLORS.fondo,
-              borderRadius: '15px'
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <i className="fas fa-paw" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
-                <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Tipo</h4>
-                <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.tipo_animal ? selectedAnimal.tipo_animal.charAt(0).toUpperCase() + selectedAnimal.tipo_animal.slice(1) : 'No especificado'}</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <i className="fas fa-venus-mars" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
-                <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Género</h4>
-                <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.genero ? selectedAnimal.genero.charAt(0).toUpperCase() + selectedAnimal.genero.slice(1) : 'No especificado'}</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <i className="fas fa-birthday-cake" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
-                <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Edad</h4>
-                <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.edad} {selectedAnimal.edad === 1 ? 'año' : 'años'}</p>
-              </div>
-              {selectedAnimal.raza && (
-                <div style={{ textAlign: 'center' }}>
-                  <i className="fas fa-dog" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
-                  <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Raza</h4>
-                  <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.raza}</p>
+          {/* Separador visual */}
+          <div style={{
+            width: '100%',
+            height: '8px',
+            background: `linear-gradient(90deg, ${COLORS.fondo} 0%, ${COLORS.acento} 50%, ${COLORS.fondo} 100%)`,
+            margin: '0',
+            border: 'none',
+            opacity: 0.18
+          }} />
+
+          {/* Contenido del modal: detalles o formulario */}
+          <div style={{ padding: '2rem', animation: 'modalFadeIn 0.4s' }}>
+            {!showAdopcionForm ? (
+              <>
+                {/* Grid de información básica */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gap: '1.5rem',
+                  marginBottom: '2rem',
+                  padding: '1.5rem',
+                  background: COLORS.fondo,
+                  borderRadius: '15px',
+                  boxShadow: '0 2px 12px #e28f5422'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <i className="fas fa-paw" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
+                    <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Tipo</h4>
+                    <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.tipo_animal ? selectedAnimal.tipo_animal.charAt(0).toUpperCase() + selectedAnimal.tipo_animal.slice(1) : 'No especificado'}</p>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <i className="fas fa-venus-mars" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
+                    <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Género</h4>
+                    <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.genero ? selectedAnimal.genero.charAt(0).toUpperCase() + selectedAnimal.genero.slice(1) : 'No especificado'}</p>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <i className="fas fa-birthday-cake" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
+                    <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Edad</h4>
+                    <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.edad} {selectedAnimal.edad === 1 ? 'año' : 'años'}</p>
+                  </div>
+                  {selectedAnimal.raza && (
+                    <div style={{ textAlign: 'center' }}>
+                      <i className="fas fa-dog" style={{ fontSize: '1.5rem', color: COLORS.acento, marginBottom: '0.5rem' }}></i>
+                      <h4 style={{ margin: '0.5rem 0', color: COLORS.texto }}>Raza</h4>
+                      <p style={{ margin: 0, color: COLORS.textoSec }}>{selectedAnimal.raza}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Descripción y condición */}
-            {(selectedAnimal.descripcion || selectedAnimal.condicion) && (
-              <div style={{
-                borderTop: `2px solid ${COLORS.secundario}`,
-                paddingTop: '1.5rem',
-                marginTop: '1.5rem'
-              }}>
-                {selectedAnimal.descripcion && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ color: COLORS.texto, marginBottom: '0.8rem' }}>Descripción</h3>
-                    <p style={{ color: COLORS.textoSec, lineHeight: '1.6', margin: 0 }}>{selectedAnimal.descripcion}</p>
+                {/* Descripción y condición */}
+                {(selectedAnimal.descripcion || selectedAnimal.condicion) && (
+                  <div style={{
+                    borderTop: `2px solid ${COLORS.secundario}`,
+                    paddingTop: '1.5rem',
+                    marginTop: '1.5rem'
+                  }}>
+                    {selectedAnimal.descripcion && (
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <h3 style={{ color: COLORS.texto, marginBottom: '0.8rem' }}>Descripción</h3>
+                        <p style={{ color: COLORS.textoSec, lineHeight: '1.6', margin: 0 }}>{selectedAnimal.descripcion}</p>
+                      </div>
+                    )}
+                    {selectedAnimal.condicion && (
+                      <div>
+                        <h3 style={{ color: COLORS.texto, marginBottom: '0.8rem' }}>Condición</h3>
+                        <p style={{ color: COLORS.textoSec, lineHeight: '1.6', margin: 0 }}>{selectedAnimal.condicion}</p>
+                      </div>
+                    )}
                   </div>
                 )}
-                {selectedAnimal.condicion && (
-                  <div>
-                    <h3 style={{ color: COLORS.texto, marginBottom: '0.8rem' }}>Condición</h3>
-                    <p style={{ color: COLORS.textoSec, lineHeight: '1.6', margin: 0 }}>{selectedAnimal.condicion}</p>
+
+                {/* Fecha de ingreso */}
+                <div style={{
+                  marginTop: '2rem',
+                  padding: '1rem',
+                  background: COLORS.fondo,
+                  borderRadius: '10px',
+                  textAlign: 'center',
+                  color: COLORS.textoSec,
+                  fontSize: '0.9rem',
+                  boxShadow: '0 1px 6px #e28f5411'
+                }}>
+                  <i className="fas fa-calendar-alt" style={{ marginRight: '8px', color: COLORS.acento }}></i>
+                  Ingresó el {formatDate(selectedAnimal.fecha_ingreso)}
+                </div>
+
+                {/* Botón de adoptar */}
+                <button
+                  style={{
+                    width: '100%',
+                    background: COLORS.acento,
+                    color: '#fff',
+                    border: 'none',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    fontSize: '1.18rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    marginTop: '1.5rem',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 16px rgba(226,143,84,0.18)',
+                    letterSpacing: '0.5px'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(226,143,84,0.22)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(226,143,84,0.18)';
+                  }}
+                  onClick={() => handleOpenAdopcionModal(selectedAnimal)}
+                >
+                  Adoptar a {selectedAnimal.nombre}
+                </button>
+              </>
+            ) : (
+              <>
+                <form className="form-adopcion-below" onSubmit={handleAdopcionSubmit} style={{
+                  marginTop: 0,
+                  background: 'linear-gradient(135deg, #fff8f0 60%, #f4e2d8 100%)',
+                  borderRadius: '32px',
+                  boxShadow: '0 12px 48px #e28f5440, 0 1.5px 0 #fff inset',
+                  padding: '2.5rem 2.5rem 2.5rem 2.5rem',
+                  maxWidth: '430px',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'modalFadeIn 0.5s',
+                  minHeight: '420px',
+                  position: 'relative',
+                }}>
+                  <h2 style={{
+                    color: COLORS.acento,
+                    fontSize: '2rem',
+                    fontFamily: 'Edu NSW ACT Hand Pre, cursive',
+                    textAlign: 'center',
+                    marginBottom: '2rem',
+                    fontWeight: 'bold',
+                    letterSpacing: '0.5px',
+                    textShadow: '0 2px 8px #e28f5422'
+                  }}>Formulario de Adopción</h2>
+                  {adopcionSuccess && (
+                    <div className="success-message">{adopcionSuccess}</div>
+                  )}
+                  {adopcionError && (
+                    <div className="error-message">{adopcionError}</div>
+                  )}
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.3rem' }}>
+                    {/* Nombre completo */}
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{
+                        color: COLORS.texto,
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        textAlign: 'left',
+                        letterSpacing: '0.2px',
+                        margin: 0
+                      }}>Nombre Completo *</label>
+                      <input
+                        name="nombre"
+                        value={adopcionForm.nombre}
+                        onChange={handleAdopcionChange}
+                        placeholder="Ej: Juan Pérez"
+                        className="input-grande input-left"
+                        required
+                        readOnly
+                        style={{
+                          background: COLORS.fondo,
+                          border: `2px solid ${COLORS.secundario}`,
+                          borderRadius: '16px',
+                          fontSize: '1.08rem',
+                          color: COLORS.textoSec,
+                          padding: '1rem 1.2rem',
+                          width: '100%',
+                          boxShadow: '0 1px 4px #e28f5411',
+                        }}
+                      />
+                    </div>
+                    {/* Cédula */}
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{
+                        color: COLORS.texto,
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        textAlign: 'left',
+                        letterSpacing: '0.2px',
+                        margin: 0
+                      }}>Cédula *</label>
+                      <input
+                        name="cedula"
+                        value={adopcionForm.cedula}
+                        onChange={handleAdopcionChange}
+                        placeholder="Ej: 1234567890"
+                        className="input-grande input-left"
+                        required
+                        readOnly
+                        style={{
+                          background: COLORS.fondo,
+                          border: `2px solid ${COLORS.secundario}`,
+                          borderRadius: '16px',
+                          fontSize: '1.08rem',
+                          color: COLORS.textoSec,
+                          padding: '1rem 1.2rem',
+                          width: '100%',
+                          boxShadow: '0 1px 4px #e28f5411',
+                        }}
+                      />
+                    </div>
+                    {/* Correo */}
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{
+                        color: COLORS.texto,
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        textAlign: 'left',
+                        letterSpacing: '0.2px',
+                        margin: 0
+                      }}>Correo *</label>
+                      <input
+                        name="correo"
+                        value={adopcionForm.correo}
+                        onChange={handleAdopcionChange}
+                        placeholder="Ej: correo@ejemplo.com"
+                        className="input-grande input-left"
+                        required
+                        readOnly
+                        style={{
+                          background: COLORS.fondo,
+                          border: `2px solid ${COLORS.secundario}`,
+                          borderRadius: '16px',
+                          fontSize: '1.08rem',
+                          color: COLORS.textoSec,
+                          padding: '1rem 1.2rem',
+                          width: '100%',
+                          boxShadow: '0 1px 4px #e28f5411',
+                        }}
+                      />
+                    </div>
+                    {/* Fecha de solicitud */}
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{
+                        color: COLORS.texto,
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        textAlign: 'left',
+                        letterSpacing: '0.2px',
+                        margin: 0
+                      }}>Fecha de solicitud *</label>
+                      <input
+                        name="fecha"
+                        value={adopcionForm.fecha}
+                        onChange={handleAdopcionChange}
+                        type="date"
+                        className="input-grande input-left"
+                        required
+                        style={{
+                          background: COLORS.fondo,
+                          border: `2px solid ${COLORS.secundario}`,
+                          borderRadius: '16px',
+                          fontSize: '1.08rem',
+                          color: COLORS.textoSec,
+                          padding: '1rem 1.2rem',
+                          width: '100%',
+                          boxShadow: '0 1px 4px #e28f5411',
+                        }}
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
+                  <div className="form-buttons" style={{ marginTop: '2.5rem', gap: '1.5rem', justifyContent: 'center', display: 'flex', width: '100%' }}>
+                    <button
+                      type="submit"
+                      className="btn-iniciar-adopcion"
+                      disabled={adopcionLoading}
+                      style={{
+                        background: COLORS.acento,
+                        color: '#fff',
+                        border: 'none',
+                        padding: '1rem 0',
+                        borderRadius: '14px',
+                        fontSize: '1.13rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 16px rgba(226,143,84,0.18)',
+                        letterSpacing: '0.5px',
+                        transition: 'all 0.2s',
+                        width: '50%'
+                      }}
+                    >
+                      {adopcionLoading ? 'Enviando...' : 'Iniciar adopción'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCloseAdopcionForm}
+                      className="btn-cancelar-adopcion"
+                      disabled={adopcionLoading}
+                      style={{
+                        background: COLORS.fondo,
+                        color: COLORS.acento,
+                        border: `2px solid ${COLORS.acento}`,
+                        padding: '1rem 0',
+                        borderRadius: '14px',
+                        fontSize: '1.13rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px #e28f5411',
+                        width: '50%',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                  <style>{`
+                    @keyframes modalFadeIn {
+                      from { opacity: 0; transform: translateY(40px); }
+                      to { opacity: 1; transform: translateY(0); }
+                    }
+                  `}</style>
+                </form>
+              </>
             )}
-
-            {/* Fecha de ingreso */}
-            <div style={{
-              marginTop: '2rem',
-              padding: '1rem',
-              background: COLORS.fondo,
-              borderRadius: '10px',
-              textAlign: 'center',
-              color: COLORS.textoSec,
-              fontSize: '0.9rem'
-            }}>
-              <i className="fas fa-calendar-alt" style={{ marginRight: '8px', color: COLORS.acento }}></i>
-              Ingresó el {formatDate(selectedAnimal.fecha_ingreso)}
-            </div>
-
-            {/* Botón de adoptar */}
-            <button style={{
-              width: '100%',
-              background: COLORS.acento,
-              color: '#fff',
-              border: 'none',
-              padding: '1rem',
-              borderRadius: '10px',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              marginTop: '1.5rem',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 8px rgba(226,143,84,0.3)'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(226,143,84,0.4)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(226,143,84,0.3)';
-            }}
-            >
-              Adoptar a {selectedAnimal.nombre}
-            </button>
           </div>
         </div>
       </div>
     );
-  }, [selectedAnimal, showModal, formatDate]);
+  }, [selectedAnimal, showModal, showAdopcionForm, formatDate, handleOpenAdopcionModal, handleAdopcionSubmit, adopcionForm, adopcionLoading, adopcionSuccess, adopcionError, animalImageErrors, handleAnimalImageError, COLORS, AnimalImagePlaceholder, handleCloseModal, handleCloseAdopcionForm, handleAdopcionChange]);
 
   if (error) return (
     <div style={{
@@ -665,6 +983,146 @@ const DetalleFundacion = () => {
 
       {/* Modal de detalles del animal */}
       {AnimalModal}
+
+      {/* Modal de adopción estilizado */}
+      {showAdopcionModal && (
+        <div className="modal-adopcion-overlay">
+          <div className="modal-adopcion">
+            <form className="form-adopcion-below" onSubmit={handleAdopcionSubmit}>
+              <h2>Formulario de Adopción</h2>
+              {adopcionSuccess && (
+                <div className="success-message">{adopcionSuccess}</div>
+              )}
+              {adopcionError && (
+                <div className="error-message">{adopcionError}</div>
+              )}
+              <label>Nombre Completo *</label>
+              <input
+                name="nombre"
+                value={adopcionForm.nombre}
+                onChange={handleAdopcionChange}
+                placeholder="Ej: Juan Pérez"
+                className="input-grande input-left"
+                required
+                readOnly
+                style={{
+                  background: COLORS.fondo,
+                  border: `2.5px solid ${COLORS.secundario}`,
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  color: COLORS.textoSec,
+                  marginBottom: '0.3rem',
+                  padding: '0.7rem 1.1rem',
+                  boxShadow: '0 2px 8px #e28f5411'
+                }}
+              />
+              <label>Cédula *</label>
+              <input
+                name="cedula"
+                value={adopcionForm.cedula}
+                onChange={handleAdopcionChange}
+                placeholder="Ej: 1234567890"
+                className="input-grande input-left"
+                required
+                readOnly
+                style={{
+                  background: COLORS.fondo,
+                  border: `2.5px solid ${COLORS.secundario}`,
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  color: COLORS.textoSec,
+                  marginBottom: '0.3rem',
+                  padding: '0.7rem 1.1rem',
+                  boxShadow: '0 2px 8px #e28f5411'
+                }}
+              />
+              <label>Correo *</label>
+              <input
+                name="correo"
+                value={adopcionForm.correo}
+                onChange={handleAdopcionChange}
+                placeholder="Ej: correo@ejemplo.com"
+                className="input-grande input-left"
+                required
+                readOnly
+                style={{
+                  background: COLORS.fondo,
+                  border: `2.5px solid ${COLORS.secundario}`,
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  color: COLORS.textoSec,
+                  marginBottom: '0.3rem',
+                  padding: '0.7rem 1.1rem',
+                  boxShadow: '0 2px 8px #e28f5411'
+                }}
+              />
+              <label>Fecha de solicitud *</label>
+              <input
+                name="fecha"
+                value={adopcionForm.fecha}
+                onChange={handleAdopcionChange}
+                type="date"
+                className="input-grande input-left"
+                required
+                style={{
+                  background: COLORS.fondo,
+                  border: `2.5px solid ${COLORS.secundario}`,
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  color: COLORS.textoSec,
+                  marginBottom: '0.3rem',
+                  padding: '0.7rem 1.1rem',
+                  boxShadow: '0 2px 8px #e28f5411'
+                }}
+              />
+              <div className="form-buttons" style={{ marginTop: '2.2rem', gap: '2.5rem', justifyContent: 'center', display: 'flex' }}>
+                <button
+                  type="submit"
+                  className="btn-iniciar-adopcion"
+                  disabled={adopcionLoading}
+                  style={{
+                    background: COLORS.acento,
+                    color: '#fff',
+                    border: 'none',
+                    padding: '1rem 2.2rem',
+                    borderRadius: '14px',
+                    fontSize: '1.05rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 16px rgba(226,143,84,0.18)',
+                    letterSpacing: '0.5px',
+                    transition: 'all 0.2s',
+                    minWidth: '140px'
+                  }}
+                >
+                  {adopcionLoading ? 'Enviando...' : 'Iniciar adopción'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCloseAdopcionForm}
+                  className="btn-cancelar-adopcion"
+                  disabled={adopcionLoading}
+                  style={{
+                    background: COLORS.fondo,
+                    color: COLORS.acento,
+                    border: `2.5px solid ${COLORS.acento}`,
+                    padding: '1rem 2.2rem',
+                    borderRadius: '14px',
+                    fontSize: '1.05rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px #e28f5411',
+                    minWidth: '140px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Volver
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
       <style>{`

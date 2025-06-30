@@ -25,6 +25,8 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     width: 90%;
     max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
     border: 1px solid #F0E5D8;
     animation: slideInModal 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
@@ -32,6 +34,14 @@
 @keyframes slideInModal {
     from { transform: translateY(-50px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  .edit-card-fundacion {
+    padding: 1.5rem;
+    max-width: 98vw;
+    max-height: 95vh;
+  }
 }
 
 .edit-card-fundacion h2 {
@@ -74,6 +84,54 @@
     outline: none;
     border-color: #E28F54;
     box-shadow: 0 0 0 3px rgba(226, 143, 84, 0.3);
+}
+
+.form-grid-fundacion select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #E0D3C4;
+    border-radius: 10px;
+    background-color: #FFFFFF;
+    color: #4B3A2D;
+    font-family: 'Edu NSW ACT Hand Pre', cursive;
+    font-size: 1.1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.form-grid-fundacion select:focus {
+    outline: none;
+    border-color: #E28F54;
+    box-shadow: 0 0 0 3px rgba(226, 143, 84, 0.3);
+}
+
+.form-grid-fundacion select option {
+    background-color: #FFFFFF;
+    color: #4B3A2D;
+    padding: 8px;
+}
+
+.form-section-divider {
+    margin: 30px 0 20px 0;
+    padding: 20px 0;
+    border-top: 2px solid #E0D3C4;
+    border-bottom: 1px solid #F0E5D8;
+}
+
+.form-section-divider h3 {
+    font-family: 'Special Elite', cursive;
+    color: #4B3A2D;
+    font-size: 1.5rem;
+    margin: 0 0 8px 0;
+    text-align: center;
+}
+
+.section-description {
+    text-align: center;
+    color: #7C6C5F;
+    font-size: 0.95rem;
+    margin: 0;
+    font-style: italic;
 }
 
 .form-grid-fundacion .full-width {

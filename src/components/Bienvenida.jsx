@@ -39,10 +39,9 @@ const getUserFromLocalStorage = () => {
 const fetchNombreUsuario = async (user) => {
   // Si ya tiene nombre, retornarlo
   if (user && (user.nombre || user.name)) return user.nombre || user.name;
-  // Buscar por email o documento
+  // Buscar por cédula
   let query = '';
-  if (user && user.email) query = `?email=${encodeURIComponent(user.email)}`;
-  else if (user && user.documentNumber) query = `?documentNumber=${encodeURIComponent(user.documentNumber)}`;
+  if (user && user.cedula) query = `?cedula=${encodeURIComponent(user.cedula)}`;
   if (!query) return 'Patitas';
   try {
     const res = await fetch(`http://localhost:5000/api/usuario${query}`);
@@ -117,8 +116,8 @@ const Bienvenida = () => {
             </div>
           </div>
           <nav style={{ display: 'flex', gap: 36, alignItems: 'center', position: 'relative' }}>
-            <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quienes Somos?</a>
             <Link className="nav-link-animada" to="/fundaciones" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Fundaciones</Link>
+            <Link className="nav-link-animada" to="/eventos" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Eventos</Link>
             <Link className="nav-link-animada" to="/donaciones" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>¿Quieres Ayudar?</Link>
             <a className="nav-link-animada" href="#" style={{ color: '#4B3A2D', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.35rem' }}>Soporte</a>
             <div style={{ position: 'relative', display: 'inline-block' }}>

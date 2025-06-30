@@ -6,7 +6,7 @@ class Modelo_fundacion:
     def comprobar_fundacion(db, nit, contrasena):
         try:
             cursor = db.connection.cursor()
-            sql = "SELECT nit, nombre, direccion, telefono, email, persona_acargo, contrasena, foto_url, descripcion FROM Fundaciones WHERE nit = %s"
+            sql = "SELECT nit, nombre, direccion, telefono, email, persona_acargo, contrasena, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto FROM Fundaciones WHERE nit = %s"
             cursor.execute(sql, (nit,))
             row = cursor.fetchone()
             
@@ -19,7 +19,12 @@ class Modelo_fundacion:
                     'email': row[4],
                     'persona_acargo': row[5],
                     'foto_url': row[7],
-                    'descripcion': row[8]
+                    'descripcion': row[8],
+                    'banco': row[9],
+                    'tipo_cuenta': row[10],
+                    'numero_cuenta': row[11],
+                    'titular_cuenta': row[12],
+                    'telefono_contacto': row[13]
                 }
             return None
         except Exception as ex:
@@ -32,8 +37,8 @@ class Modelo_fundacion:
             cursor = db.connection.cursor()
             contrasena_hash = generate_password_hash(fundacion['contrasena'])
             sql = """
-                INSERT INTO Fundaciones (nit, nombre, direccion, telefono, email, persona_acargo, contrasena, foto_url, descripcion)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO Fundaciones (nit, nombre, direccion, telefono, email, persona_acargo, contrasena, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(sql, (
                 fundacion['nit'],
@@ -44,7 +49,12 @@ class Modelo_fundacion:
                 fundacion['persona_acargo'],
                 contrasena_hash,
                 fundacion.get('foto_url', None),
-                fundacion['descripcion']
+                fundacion.get('descripcion', ''),
+                fundacion.get('banco', None),
+                fundacion.get('tipo_cuenta', None),
+                fundacion.get('numero_cuenta', None),
+                fundacion.get('titular_cuenta', None),
+                fundacion.get('telefono_contacto', None)
             ))
             db.connection.commit()
             return cursor.lastrowid
@@ -56,7 +66,7 @@ class Modelo_fundacion:
     def obtener_fundacion(db, nit):
         try:
             cursor = db.connection.cursor()
-            sql = "SELECT nit, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion FROM Fundaciones WHERE nit = %s"
+            sql = "SELECT nit, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto FROM Fundaciones WHERE nit = %s"
             cursor.execute(sql, (nit,))
             row = cursor.fetchone()
             
@@ -69,7 +79,12 @@ class Modelo_fundacion:
                     'email': row[4],
                     'persona_acargo': row[5],
                     'foto_url': row[6],
-                    'descripcion': row[7]
+                    'descripcion': row[7],
+                    'banco': row[8],
+                    'tipo_cuenta': row[9],
+                    'numero_cuenta': row[10],
+                    'titular_cuenta': row[11],
+                    'telefono_contacto': row[12]
                 }
             return None
         except Exception as ex:
@@ -84,7 +99,7 @@ class Modelo_fundacion:
             update_fields = []
             valores = []
 
-            campos_permitidos = ['nombre', 'direccion', 'telefono', 'email', 'persona_acargo', 'foto_url', 'descripcion']
+            campos_permitidos = ['nombre', 'direccion', 'telefono', 'email', 'persona_acargo', 'foto_url', 'descripcion', 'banco', 'tipo_cuenta', 'numero_cuenta', 'titular_cuenta', 'telefono_contacto']
             for key in campos_permitidos:
                 if key in datos and datos[key] is not None:
                     update_fields.append(f"{key} = %s")
@@ -126,7 +141,7 @@ class Modelo_fundacion:
     def listar_fundaciones(db):
         try:
             cursor = db.connection.cursor()
-            sql = "SELECT nit, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion FROM Fundaciones"
+            sql = "SELECT nit, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto FROM Fundaciones"
             cursor.execute(sql)
             rows = cursor.fetchall()
             fundaciones = []
@@ -139,7 +154,12 @@ class Modelo_fundacion:
                     'email': row[4],
                     'persona_acargo': row[5],
                     'foto_url': row[6],
-                    'descripcion': row[7]
+                    'descripcion': row[7],
+                    'banco': row[8],
+                    'tipo_cuenta': row[9],
+                    'numero_cuenta': row[10],
+                    'titular_cuenta': row[11],
+                    'telefono_contacto': row[12]
                 })
             return fundaciones
         except Exception as ex:

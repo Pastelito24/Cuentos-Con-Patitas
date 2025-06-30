@@ -3,6 +3,7 @@ import Card from './Card';
 import EditarUsuarioCard from './EditarUsuarioCard';
 import ConfirmacionModal from './ConfirmacionModal';
 import gatitoLloron from '../assets/img/Gatito_Lloron.png';
+import gatitodonacion from '../assets/img/gatitodonacion.png';
 import { FaUserEdit, FaCommentDots, FaHeart, FaComments } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import '../App.css';
@@ -64,6 +65,99 @@ const HistorialIcon = () => (
   </div>
 );
 
+const HistorialModal = ({ isOpen, onClose, historial }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="modal-historial-bg">
+      <div className="modal-historial-cute">
+        <button className="close-historial-btn" onClick={onClose}>&times;</button>
+        <h2 className="historial-title">🐾 Historial de Donaciones</h2>
+        {historial.length === 0 ? (
+          <div className="historial-vacio">
+            <img src={gatitodonacion} alt="Sin donaciones" style={{ width: 120, margin: '0 auto', display: 'block' }} />
+            <p style={{ color: '#E28F54', fontWeight: 'bold', fontSize: '1.2rem', marginTop: 16 }}>¡Aún no has realizado donaciones!<br/>Cuando dones, tus patitas aparecerán aquí 🐾</p>
+          </div>
+        ) : (
+          <div className="historial-lista">
+            {historial.map((d, idx) => (
+              <div className="historial-card-cute" key={d.id || idx}>
+                <div className="historial-card-header">
+                  <span className="historial-icon">💖</span>
+                  <span className="historial-tipo">{d.tipo}</span>
+                  <span className="historial-estado {d.estado_pago === 'pendiente' ? 'pendiente' : 'completado'}">
+                    {d.estado_pago === 'pendiente' ? '⏳ Pendiente' : '✔️ Completado'}
+                  </span>
+                </div>
+                <div className="historial-card-body">
+                  <div className="historial-monto">{d.monto ? `$${d.monto} ${d.moneda || 'COP'}` : ''}</div>
+                  <div className="historial-fecha">{d.fecha ? new Date(d.fecha).toLocaleDateString() : ''}</div>
+                  <div className="historial-descripcion">{d.descripcion}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <style>{`
+        .modal-historial-bg {
+          position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.25); z-index: 9999;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .modal-historial-cute {
+          background: #FFF8F0;
+          border-radius: 24px;
+          padding: 56px 28px 28px 28px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+          min-width: 340px; max-width: 95vw; max-height: 80vh; overflow-y: auto;
+          position: relative;
+          animation: popIn 0.4s;
+        }
+        .close-historial-btn {
+          position: absolute; top: 20px; right: 28px;
+          font-size: 2rem; color: #e28f54; cursor: pointer; font-weight: bold;
+          background: rgba(255,255,255,0.95); border: none;
+          z-index: 10;
+          padding: 2px 10px;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px #E28F5444;
+          transition: background 0.2s, box-shadow 0.2s;
+        }
+        .close-historial-btn:hover {
+          background: #fbe2cf;
+        }
+        .historial-title {
+          text-align: center; color: #E28F54; font-size: 2.1rem; font-family: 'Edu NSW ACT Hand Pre', cursive; margin-bottom: 18px; margin-top: 10px;
+        }
+        .historial-vacio { text-align: center; margin-top: 24px; }
+        .historial-lista { display: flex; flex-direction: column; gap: 18px; }
+        .historial-card-cute {
+          background: #fff; border-radius: 16px; box-shadow: 0 2px 12px #E28F5444;
+          padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;
+          border: 2px solid #FBE2CF;
+          transition: box-shadow 0.2s, border 0.2s;
+        }
+        .historial-card-cute:hover {
+          box-shadow: 0 6px 24px #E28F5444;
+          border: 2px solid #E28F54;
+        }
+        .historial-card-header {
+          display: flex; align-items: center; gap: 12px; margin-bottom: 4px;
+        }
+        .historial-icon { font-size: 1.5rem; }
+        .historial-tipo { color: #A7D0F5; font-weight: bold; font-size: 1.1rem; }
+        .historial-estado { margin-left: auto; font-size: 1rem; font-weight: bold; }
+        .historial-estado.pendiente { color: #E28F54; }
+        .historial-estado.completado { color: #4B3A2D; }
+        .historial-monto { color: #E28F54; font-size: 1.2rem; font-weight: bold; }
+        .historial-fecha { color: #7C6C5F; font-size: 0.98rem; }
+        .historial-descripcion { color: #4B3A2D; font-size: 1.05rem; margin-top: 2px; }
+        @keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+      `}</style>
+    </div>
+  );
+};
+
 const MiCuenta = () => {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
@@ -72,6 +166,9 @@ const MiCuenta = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [loadingHistorial, setLoadingHistorial] = useState(false);
   
   useEffect(() => {
     const fetchUsuario = async () => {
@@ -81,12 +178,40 @@ const MiCuenta = () => {
         if (data.success) {
           setUsuario(data.usuario);
         } else {
-          setError(data.error || 'No se pudieron cargar los datos del usuario.');
-          if (response.status === 403) navigate('/');
+          // Si no hay sesión backend, intenta cargar desde localStorage
+          const localUser = {
+            nombre: localStorage.getItem('nombre') || '',
+            cedula: localStorage.getItem('cedula') || '',
+            email: localStorage.getItem('email') || '',
+            telefono: localStorage.getItem('telefono') || '',
+            direccion: localStorage.getItem('direccion') || '',
+            edad: localStorage.getItem('edad') || '',
+            usuariofoto_url: localStorage.getItem('usuariofoto_url') || '',
+          };
+          if (localUser.nombre || localUser.cedula) {
+            setUsuario(localUser);
+          } else {
+            setError(data.error || 'No se pudieron cargar los datos del usuario.');
+            if (response.status === 403) navigate('/');
+          }
         }
       } catch (err) {
-        setError('Error de conexión.');
-        navigate('/');
+        // Si hay error de conexión, intenta cargar desde localStorage
+        const localUser = {
+          nombre: localStorage.getItem('nombre') || '',
+          cedula: localStorage.getItem('cedula') || '',
+          email: localStorage.getItem('email') || '',
+          telefono: localStorage.getItem('telefono') || '',
+          direccion: localStorage.getItem('direccion') || '',
+          edad: localStorage.getItem('edad') || '',
+          usuariofoto_url: localStorage.getItem('usuariofoto_url') || '',
+        };
+        if (localUser.nombre || localUser.cedula) {
+          setUsuario(localUser);
+        } else {
+          setError('Error de conexión.');
+          navigate('/');
+        }
       } finally {
         setLoading(false);
       }
@@ -132,7 +257,25 @@ const MiCuenta = () => {
       setError('Error de conexión al intentar eliminar la cuenta.');
     }
   };
-  
+
+  const handleOpenHistorial = async () => {
+    setShowHistorial(true);
+    setLoadingHistorial(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/historial_donaciones', { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        setHistorial(data.historial);
+      } else {
+        setHistorial([]);
+      }
+    } catch {
+      setHistorial([]);
+    } finally {
+      setLoadingHistorial(false);
+    }
+  };
+
   const cards = [
     {
       title: 'Editar Datos',
@@ -142,7 +285,7 @@ const MiCuenta = () => {
     {
       title: 'Historial',
       icon: <HistorialIcon />,
-      action: () => alert('Funcionalidad de Historial en desarrollo.'),
+      action: handleOpenHistorial,
     },
     {
       title: 'Eliminar Cuenta',
@@ -175,7 +318,17 @@ const MiCuenta = () => {
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div style={{ color: '#E28F54', textAlign: 'center', marginTop: '3rem', fontSize: '1.3rem' }}>Error: {error}</div>;
+  }
+
+  // Si no hay datos de usuario, mostrar mensaje amigable
+  if (!usuario || (!usuario.nombre && !usuario.cedula)) {
+    return (
+      <div style={{ color: '#E28F54', textAlign: 'center', marginTop: '3rem', fontSize: '1.3rem' }}>
+        No se encontraron datos de usuario.<br />
+        Por favor inicia sesión nuevamente.
+      </div>
+    );
   }
 
   return (
@@ -275,6 +428,13 @@ const MiCuenta = () => {
         title="¿Estás seguro?"
         message="Esta acción es permanente y no podrás recuperar tu cuenta. Todos tus datos serán eliminados."
       />
+      {showHistorial && (
+        <HistorialModal
+          isOpen={showHistorial}
+          onClose={() => setShowHistorial(false)}
+          historial={historial}
+        />
+      )}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
       <style>{`
         .nav-link-animada {

@@ -78,6 +78,54 @@ const EditarFundacionCard = ({ fundacion: initialFundacion, onClose, onUpdate })
             <label htmlFor="contrasena" className="full-width">Nueva Contraseña</label>
             <input type="password" id="contrasena" name="contrasena" placeholder="Dejar en blanco para no cambiar" onChange={handleChange} className="full-width" />
           </div>
+
+          <div className="form-section-divider">
+            <h3>Información Bancaria</h3>
+            <p className="section-description">Información para recibir donaciones por transferencia bancaria y Nequi</p>
+          </div>
+
+          <div className="form-grid-fundacion">
+            <label htmlFor="banco">Banco</label>
+            <select id="banco" name="banco" value={fundacion.banco || ''} onChange={handleChange}>
+              <option value="">Seleccionar banco</option>
+              <option value="Bancolombia">Bancolombia</option>
+              <option value="Davivienda">Davivienda</option>
+              <option value="Banco de Bogotá">Banco de Bogotá</option>
+              <option value="BBVA Colombia">BBVA Colombia</option>
+              <option value="Colpatria">Colpatria</option>
+              <option value="Banco Popular">Banco Popular</option>
+              <option value="Banco AV Villas">Banco AV Villas</option>
+              <option value="Banco Caja Social">Banco Caja Social</option>
+              <option value="Banco Agrario">Banco Agrario</option>
+              <option value="Banco de Occidente">Banco de Occidente</option>
+              <option value="Scotiabank Colpatria">Scotiabank Colpatria</option>
+              <option value="Citibank Colombia">Citibank Colombia</option>
+              <option value="HSBC Colombia">HSBC Colombia</option>
+              <option value="Banco Santander">Banco Santander</option>
+              <option value="Banco Falabella">Banco Falabella</option>
+              <option value="Banco Pichincha">Banco Pichincha</option>
+              <option value="Banco GNB Sudameris">Banco GNB Sudameris</option>
+              <option value="Bancoomeva">Bancoomeva</option>
+              <option value="Coopcentral">Coopcentral</option>
+              <option value="Otro">Otro</option>
+            </select>
+
+            <label htmlFor="tipo_cuenta">Tipo de Cuenta</label>
+            <select id="tipo_cuenta" name="tipo_cuenta" value={fundacion.tipo_cuenta || ''} onChange={handleChange}>
+              <option value="">Seleccionar tipo</option>
+              <option value="Ahorros">Ahorros</option>
+              <option value="Corriente">Corriente</option>
+            </select>
+
+            <label htmlFor="numero_cuenta">Número de Cuenta</label>
+            <input type="text" id="numero_cuenta" name="numero_cuenta" value={fundacion.numero_cuenta || ''} onChange={handleChange} placeholder="Ej: 1234567890" />
+
+            <label htmlFor="titular_cuenta">Titular de la Cuenta</label>
+            <input type="text" id="titular_cuenta" name="titular_cuenta" value={fundacion.titular_cuenta || ''} onChange={handleChange} placeholder="Nombre completo del titular" />
+
+            <label htmlFor="telefono_contacto" className="full-width">Teléfono Nequi</label>
+            <input type="tel" id="telefono_contacto" name="telefono_contacto" value={fundacion.telefono_contacto || ''} onChange={handleChange} placeholder="Número de celular registrado en Nequi" className="full-width" />
+          </div>
           
           {error && <p className="error-message">{error}</p>}
 
