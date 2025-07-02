@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, make_response
+from flask import Flask, render_template, request, current_app, redirect, url_for, flash, jsonify, send_from_directory, make_response
 from flask_mysqldb import MySQL
 from flask_cors import CORS
 from app import create_app
@@ -246,7 +246,9 @@ def listar_fundaciones():
     cursor = db.connection.cursor()
     cursor.execute("SELECT fundacion_id, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto FROM Fundaciones")
     fundaciones = cursor.fetchall()
+    # Recupera todas las filas de la consulta y las convierte en una lista de datos de cada columna
     keys = [desc[0] for desc in cursor.description]
+    # Convierte cada fila en un diccionario con los nombres de las columnas como claves
     return jsonify([dict(zip(keys, row)) for row in fundaciones])
 
 def convert_to_dict(row, columns):
@@ -380,6 +382,7 @@ def editar_descripcion_fundacion():
 
 @app.route('/api/actualizar_fundacion', methods=['POST'])
 def actualizar_fundacion():
+    # Se usa current_user se usa para acceder a los datos de la fundación
     if not hasattr(current_user, 'nit'):
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
@@ -400,6 +403,7 @@ def actualizar_fundacion():
 
 @app.route('/api/eliminar_fundacion', methods=['DELETE'])
 def eliminar_fundacion():
+    # Se usa current_user se usa para acceder a los datos de la fundación
     if not hasattr(current_user, 'nit'):
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 

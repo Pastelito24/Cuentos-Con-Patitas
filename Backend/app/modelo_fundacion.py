@@ -36,6 +36,7 @@ class Modelo_fundacion:
         try:
             cursor = db.connection.cursor()
             contrasena_hash = generate_password_hash(fundacion['contrasena'])
+            # Asignamos marcadores de posición para los valores que se insertarán
             sql = """
                 INSERT INTO Fundaciones (nit, nombre, direccion, telefono, email, persona_acargo, contrasena, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -96,15 +97,22 @@ class Modelo_fundacion:
         try:
             cursor = db.connection.cursor()
             
+            # Lista de campos que se actualizarán
             update_fields = []
+            # Lista de valores nuevos
             valores = []
 
             campos_permitidos = ['nombre', 'direccion', 'telefono', 'email', 'persona_acargo', 'foto_url', 'descripcion', 'banco', 'tipo_cuenta', 'numero_cuenta', 'titular_cuenta', 'telefono_contacto']
             for key in campos_permitidos:
+
+                # Verifica si el campo existe y no es None
                 if key in datos and datos[key] is not None:
+                    # Agrega el campo y el valor a la lista de campos y valores
                     update_fields.append(f"{key} = %s")
+                    # Agrega el valor a la lista de valores
                     valores.append(datos[key])
 
+            # Verifica si no hay campos para actualizar
             if not update_fields:
                 if 'contrasena' not in datos or not datos['contrasena']:
                     return True
@@ -114,6 +122,7 @@ class Modelo_fundacion:
                 valores.append(nit)
                 cursor.execute(sql, tuple(valores))
 
+            # Actualiza la contraseña si se proporciona una nueva
             if 'contrasena' in datos and datos['contrasena']:
                 contrasena_hash = generate_password_hash(datos['contrasena'])
                 cursor.execute("UPDATE Fundaciones SET contrasena = %s WHERE nit = %s", (contrasena_hash, nit))
@@ -143,9 +152,12 @@ class Modelo_fundacion:
             cursor = db.connection.cursor()
             sql = "SELECT nit, nombre, direccion, telefono, email, persona_acargo, foto_url, descripcion, banco, tipo_cuenta, numero_cuenta, titular_cuenta, telefono_contacto FROM Fundaciones"
             cursor.execute(sql)
+            # Recupera todas las filas de la consulta
             rows = cursor.fetchall()
             fundaciones = []
+            # Recorre todas las filas de la consulta
             for row in rows:
+                # Crea un diccionario con los valores de la fila guardados en fundaciones
                 fundaciones.append({
                     'nit': row[0],
                     'nombre': row[1],

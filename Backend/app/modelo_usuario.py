@@ -17,8 +17,10 @@ class Modelo_usuario():
             if row is not None:
                 print("Contraseña ingresada:", user.contrasena)
                 print("Contraseña en BD:", row[2])
+                # validar la contraseña con la contraseña de la base de datos
                 if check_password_hash(row[2], user.contrasena):
                     print("Contraseña válida")
+                    # Creacion del objeto usuario
                     return Usuario(
                         usuario_id=row[0],
                         cedula=row[1],
@@ -77,6 +79,7 @@ class Modelo_usuario():
             cursor.execute(sql, (cedula,))
             row = cursor.fetchone()
             if row is not None:
+                # Creando la instancia de clase
                 return Usuario(
                     usuario_id=row[0],
                     cedula=row[1],
@@ -158,6 +161,7 @@ class Modelo_usuario():
             return True
         except Exception as ex:
             print('Error al eliminar usuario:', ex)
+            # deshace los cambios que se hicieron
             db.connection.rollback()
             return False
 
